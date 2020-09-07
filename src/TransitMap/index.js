@@ -81,14 +81,16 @@ export default function TransitMap(props) {
   ), [width, keys, path, colorScale, orderScale, dashScale]);
 
   function hoverLine(e) {
-    const { pageX, pageY, target } = e;
+    const { pageX, pageY, target, touches } = e;
     const { dataset } = target;
     const { route, status, color, path } = dataset;
     if (route) {
       if (!tooltipData || tooltipData.route !== route) {
+        const x = pageX || touches[0].pageX;
+        const y = pageY || touches[0].pageY;
         setTooltipData({
-          x: pageX,
-          y: pageY,
+          x,
+          y,
           route,
           color,
           path,
