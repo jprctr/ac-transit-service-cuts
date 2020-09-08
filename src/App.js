@@ -24,10 +24,13 @@ function App() {
     <div className="App">
       <div className='panel'>
         <div className='title'>
-          Proposed AC Transit Service Cuts Fall 2020 (30% Scenario)
+          Proposed AC Transit Service Cuts 
+        </div>
+        <div className='subtitle'>
+          Fall 2020 (30% Scenario)
         </div>
         <div className='legend'>
-          {typesInOrder.reverse().map(t => (
+          {typesInOrder.filter(t => t !== 'other').reverse().map(t => (
             <div key={t} className='item'>
               <div className='swatch' style={{ background: colorScale(t) }}/>
               <div className='label'>

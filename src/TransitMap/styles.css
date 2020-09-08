@@ -3,15 +3,17 @@
   flex: 6;
 }
 
-/*.TransitMap .controls {
+.TransitMap .controls {
   position: absolute;
   display: flex;
   margin: 1em;
   flex-direction: column;
   top: 0;
+  right: 0;
 }
 
 .TransitMap .controls .control {
+  box-sizing: border-box;
   display: flex;
   font-size: 1em;
   margin-bottom: 0.5em;
@@ -24,7 +26,7 @@
   border: 1px solid black;
   color: white;
   cursor: pointer;
-}*/
+}
 
 .TransitMap .tooltip {
   position: absolute;
@@ -32,8 +34,20 @@
   color: white;
   padding: 0.25em;
   margin: 0 1em;
+  font-size: 1.25em;
   text-transform: capitalize;
-  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid white;
+  background-color: rgba(18, 18, 18, 0.75);
+  display: flex;
+  flex-direction: column;
+}
+
+.TransitMap .tooltip div {
+  font-size: 0.8em;
+}
+
+.TransitMap .tooltip .route {
+  font-weight: bold;
 }
 
 .TransitMap svg path {

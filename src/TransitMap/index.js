@@ -11,6 +11,30 @@ import './styles.css';
 import Winter19Routeshape from './Winter19Routeshape.json';
 import serviceChanges from './ac-transit-service-cuts.json';
 
+const offsetGroups = [
+  {
+    name: 'transbay',
+    routes: ['800', '707', '706', '703', '702', '701', 'E', 'Z', 'F', 'FS', 'G', 'CB', 'J', 'L', 'LA', 'NL', 'NX', 'NX1', 'NX2', 'NX4', 'P', 'V', 'W', 'B', 'C', 'H', 'NX3', 'NXC', 'O', 'OX', 'S', 'SB'],
+    direction: [-1, 4],
+    index: 0,
+    initIndex: 0,
+  },
+  {
+    name: 'sanpablo',
+    routes: ['72', '72M', '72R'],
+    direction: [4, 0],
+    index: 0,
+    initIndex: 0,
+  },
+  {
+    name: '46',
+    routes: ['46', '46L'],
+    direction: [0, 4],
+    index: 0,
+    initIndex: 0,
+  },
+];
+
 const unused = [];
 const acTransitRoutes = feature(Winter19Routeshape,  Winter19Routeshape.objects.Winter19Routeshape);
 acTransitRoutes.features = acTransitRoutes.features.map(f => {
@@ -21,8 +45,9 @@ acTransitRoutes.features = acTransitRoutes.features.map(f => {
   }
   return f;
 })
-// .filter(f => f.changes);
-console.warn(`no change information for: ${unused.join(', ')}`)
+.filter(f => f.changes); // hiding no change info routes for now
+
+console.warn(`no change information for: ${unused.join(', ')}`);
 
 function getCenter(path, geometry) {
   const [x, y] = path.centroid(geometry);
@@ -54,7 +79,7 @@ export default function TransitMap(props) {
   const [tooltipData, setTooltipData] = useState();
   const [ref, { width, height }] = useDimensions();
 
-  const { path, translate, scale } = useMemo(() => (
+  const { projection, path, translate, scale } = useMemo(() => (
     width
       ? scaleProjection(acTransitRoutes, width, height)
       : { translate: [0, 0], scale: 0 }
@@ -63,8 +88,11 @@ export default function TransitMap(props) {
   const changeType = 'change-30';
   
   const keys = [];
-  const routes = useMemo(() => (
-    width ? (
+  const routes = useMemo(() => {
+    offsetGroups.forEach(g => {
+      g.index = g.initIndex;
+    });
+    return width ? (
       acTransitRoutes.features.map(f => {
         f.scaleKey = f.changes ? f.changes[changeType].trim() : 'other';
         keys.push(f.scaleKey);
@@ -73,27 +101,76 @@ export default function TransitMap(props) {
         f.dash = dashScale(f.scaleKey);
         f.path = path(f);
         f.center = getCenter(path, f);
+        f.start = projection(f.geometry.coordinates[0][0]);
+        const [x] = f.start;
+        if (!x) { // should just check type but for now... 
+          f.start = projection(f.geometry.coordinates[0]);
+        }
         return f;
       })
+      .sort(a => a.route)
+      // .reverse()
       .sort((a, b) => b.order - a.order)
       .reverse()
-    ) : []
-  ), [width, keys, path, colorScale, orderScale, dashScale]);
+      .map(f => {
+        const offsets = offsetGroups.filter(group => group.routes.includes(f.route));
+        if (offsets[0]) {
+          const offset = offsets[0];
+          f.offsetType = offset.name;
+          f.offset = {
+            x: offset.direction[0] * offset.index,
+            y: offset.direction[1] * offset.index,
+          };
+          offset.index++;
+        } else {
+          f.offsetType = 'default';
+          f.offset = {
+            x: 0,
+            y: 0,
+          };
+        }
+        // f.labelPos = f.offsetType === 'transbay' ? f.start : [f.center.x, f.center.y];
+        f.labelPos = f.offsetType === 'transbay' ? ({
+            x: f.start[0],
+            y: f.start[1],
+          }) : f.center;
+
+        // let pos = null;
+        // while (pos === null) {
+        //   f.geometry.coordinates
+        // }
+        //
+        //
+        return f;
+      })
+    ) : [];
+  }, [width, keys, path, colorScale, orderScale, dashScale, projection]);
 
   function hoverLine(e) {
     const { pageX, pageY, target, touches } = e;
     const { dataset } = target;
-    const { route, status, color, path } = dataset;
+    const { route, status, color, path, order, offsetx, offsety } = dataset;
     if (route) {
       if (!tooltipData || tooltipData.route !== route) {
-        const x = pageX || touches[0].pageX;
-        const y = pageY || touches[0].pageY;
+        const x = pageX !== undefined
+          ? pageX
+          : touches
+            ? touches[0].pageX
+            : 0;
+        const y = pageY !== undefined
+          ? pageY
+          : touches
+            ? touches[0].pageY
+            : 0;
         setTooltipData({
           x,
           y,
           route,
           color,
           path,
+          order,
+          offsetx,
+          offsety,
           status: status === '' ? 'no change' : status,
         });
       }
@@ -105,10 +182,11 @@ export default function TransitMap(props) {
   }
 
   const displayRoutes = useMemo(() => (
-    routes.map(r => (
+    routes.map((r, i) => (
       <g
         key={r.route}
         id={r.route}
+        transform={`translate(${r.offset.x / scale}, ${r.offset.y / scale})`}
         className='route'
       >
         <path
@@ -116,9 +194,11 @@ export default function TransitMap(props) {
           d={r.path}
           stroke={r.color}
           fill='none'
-          strokeDasharray={`${r.dash / scale} ${r.dash * 2 / scale}`}
-          strokeWidth={0.5 / scale}
+          // strokeDasharray={`${r.dash / scale} ${r.dash * 2 / scale}`}
+          strokeWidth={1.5 / scale}
+          // strokeOpacity={0.75}
           strokeOpacity={0.5}
+          pointerEvents='none'
         />
         <path
           className='highlight'
@@ -131,7 +211,55 @@ export default function TransitMap(props) {
           data-status={r.scaleKey}
           data-color={r.color}
           data-path={r.path}
+          data-order={i}
+          data-offsetx={r.offset.x}
+          data-offsety={r.offset.y}
         />
+      </g>
+    ))
+  ), [routes, scale]);
+
+  const displayLabels = useMemo(() => (
+    routes.map((r, i) => (
+      <g
+      pointerEvents='none'
+        key={`${r.route}-label`}
+        transform={`translate(${r.offset.x / scale}, ${r.offset.y / scale})`}
+      >
+        <g transform={`translate(${r.labelPos.x}, ${r.labelPos.y})`}>
+          <rect
+            x={-12 / scale}
+            width={24 / scale}
+            height={12 / scale}
+            // fill={r.color}
+            fill={'#121212'}
+            stroke={r.color}
+            strokeWidth={1 / scale}
+            fillOpacity={0.75}
+            //
+            //
+            cursor='pointer'
+            pointerEvents='auto'
+            data-route={r.route}
+            data-status={r.scaleKey}
+            data-color={r.color}
+            data-path={r.path}
+            data-order={i}
+            data-offsetx={r.offset.x}
+            data-offsety={r.offset.y}
+            //
+          />
+          <text
+            fill='white'
+            // dx={3 / scale}
+            dy={9 / scale}
+            fontSize={9 / scale}
+            textAnchor='middle'
+            pointerEvents='none'
+          >
+            {r.route}
+          </text>
+        </g>
       </g>
     ))
   ), [routes, scale]);
@@ -142,8 +270,8 @@ export default function TransitMap(props) {
         minScale={1}
         maxScale={10}
         showControls={true}
-        // controlsClass='controls'
-        // btnClass='control'
+        controlsClass='controls'
+        btnClass='control'
       >
         <svg width={width} height={height}>
           <g transform={`translate(${translate}) scale(${scale})`}>
@@ -155,16 +283,27 @@ export default function TransitMap(props) {
                 key={`${tooltipData.route}-highlight`}
                 id={`${tooltipData.route}-highlight`}
                 pointerEvents='none'
+                transform={`translate(${tooltipData.offsetx / scale}, ${tooltipData.offsety / scale})`}
               >
+                <path
+                  d={tooltipData.path}
+                  stroke='white'
+                  fill='none'
+                  strokeWidth={6 / scale}
+                  strokeOpacity='1'
+                />
                 <path
                   d={tooltipData.path}
                   stroke={tooltipData.color}
                   fill='none'
-                  strokeWidth={2 / scale}
+                  strokeWidth={3 / scale}
                   strokeOpacity='1'
                 />
               </g>
             ) : null}
+            <g onMouseMove={hoverLine} onTouchStart={hoverLine}>
+              {displayLabels}
+            </g>
           </g>
         </svg>
       </MapInteractionCSS>
@@ -172,9 +311,18 @@ export default function TransitMap(props) {
         tooltipData ? (
           <div
             className='tooltip'
-            style={{ left: tooltipData.x, top: tooltipData.y }}
+            style={{
+              left: tooltipData.x,
+              top: tooltipData.y,
+              borderColor: tooltipData.color,
+            }}
           >
-            {`${tooltipData.route}: ${tooltipData.status === '' ? 'no change' : tooltipData.status}`}
+            <div className='route'>
+              {tooltipData.route}
+            </div>
+            <div className='status'>
+              {tooltipData.status === '' ? 'no change' : tooltipData.status}
+            </div>
           </div>
         ) : null
       }
