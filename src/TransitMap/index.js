@@ -21,7 +21,7 @@ const offsetGroups = [
   },
   {
     name: 'sanpablo',
-    routes: ['72', '72M', '72R'],
+    routes: ['72', '72M', '72R', '802'],
     direction: [4, 0],
     index: 0,
     initIndex: 0,
@@ -74,6 +74,17 @@ function scaleProjection(geometry, width, height) {
   return { projection, path, scale, translate, x, y, dx, dy, };
 };
 
+// from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flat
+function flatDeep(arr, d = 1) {
+  return d > 0
+    ? arr.reduce((acc, val) => acc.concat(Array.isArray(val) ? flatDeep(val, d - 1) : val), [])
+    : arr.slice();
+};
+
+function inBox(box, pos) {
+  return box.x1 <= pos[0] && pos[0] <= box.x2 && box.y1 <= pos[1] && pos[1] <= box.y2;
+}
+
 export default function TransitMap(props) {
   const { colorScale, orderScale, dashScale } = props;
   const [tooltipData, setTooltipData] = useState();
@@ -87,32 +98,26 @@ export default function TransitMap(props) {
 
   const changeType = 'change-30';
   
-  const keys = [];
   const routes = useMemo(() => {
     offsetGroups.forEach(g => {
       g.index = g.initIndex;
     });
+    const labelPositions = [];
     return width ? (
       acTransitRoutes.features.map(f => {
         f.scaleKey = f.changes ? f.changes[changeType].trim() : 'other';
-        keys.push(f.scaleKey);
         f.color = colorScale(f.scaleKey);
         f.order = orderScale(f.scaleKey);
         f.dash = dashScale(f.scaleKey);
         f.path = path(f);
         f.center = getCenter(path, f);
-        f.start = projection(f.geometry.coordinates[0][0]);
-        const [x] = f.start;
-        if (!x) { // should just check type but for now... 
-          f.start = projection(f.geometry.coordinates[0]);
-        }
         return f;
       })
       .sort(a => a.route)
-      // .reverse()
-      .sort((a, b) => b.order - a.order)
       .reverse()
-      .map(f => {
+      .sort((a, b) => b.order - a.order)
+      // .reverse()
+      .map((f, i) => {
         const offsets = offsetGroups.filter(group => group.routes.includes(f.route));
         if (offsets[0]) {
           const offset = offsets[0];
@@ -129,22 +134,46 @@ export default function TransitMap(props) {
             y: 0,
           };
         }
-        // f.labelPos = f.offsetType === 'transbay' ? f.start : [f.center.x, f.center.y];
-        f.labelPos = f.offsetType === 'transbay' ? ({
-            x: f.start[0],
-            y: f.start[1],
-          }) : f.center;
 
-        // let pos = null;
-        // while (pos === null) {
-        //   f.geometry.coordinates
+        // f.labelPos = f.offsetType === 'transbay' ? f.start : [f.center.x, f.center.y];
+        // f.labelPos = f.offsetType === 'transbay' ? ({
+        //     x: f.start[0],
+        //     y: f.start[1],
+        //   }) : f.center;
+
+        const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
+        f.start = projection(flatCoordinates.slice(0, 2));
+        let usedPositon = labelPositions.find(lp => inBox(lp, f.start));
+        let position = f.start;
+
+        // while (usedPositon) {
+        //   flatCoordinates.splice(0, 2);
+        //   let pos = f.start;
+        //   if (flatCoordinates.length) {
+        //     pos = projection(flatCoordinates.slice(0, 2));
+        //     usedPositon = labelPositions.find(lp => inBox(lp, pos)); // 
+        //   } else {
+        //     console.log('default');
+        //     console.log(f.route);
+        //     usedPositon = false;
+        //   }
+        //   position = pos;
         // }
-        //
-        //
+
+        // const offset = 0.393;
+        // labelPositions.push({
+        //   x1: position[0] - offset,
+        //   y1: position[1],
+        //   x2: position[0] + offset,
+        //   y2: position[1] + offset,
+        // });
+
+        f.labelPos = { x: position[0], y: position[1] };
+
         return f;
       })
     ) : [];
-  }, [width, keys, path, colorScale, orderScale, dashScale, projection]);
+  }, [width, path, colorScale, orderScale, dashScale, projection]);
 
   function hoverLine(e) {
     const { pageX, pageY, target, touches } = e;
