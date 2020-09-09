@@ -284,7 +284,7 @@ export default function TransitMap(props) {
     .range([7, 14])
     .clamp(true);
     const font = Math.floor(fontScale(Math.min(width, height))) || 9;
-    console.log(font);
+    // console.log(font);
     const size = font / 3 * 4;
     return routes.map((r, i) => (
       <g
@@ -319,7 +319,7 @@ export default function TransitMap(props) {
             textAnchor='middle'
             pointerEvents='none'
           >
-            {r.route}
+            {r.route === '1' ? '1BRT' : r.route}
           </text>
         </g>
       </g>
@@ -379,7 +379,7 @@ export default function TransitMap(props) {
             }}
           >
             <div className='route'>
-              {tooltipData.route}
+              {tooltipData.route === '1' ? 'BRT (1)' : tooltipData.route}
             </div>
             <div className='status'>
               {tooltipData.status === '' ? 'no change' : tooltipData.status}
