@@ -15,21 +15,21 @@ const offsetGroups = [
   {
     name: 'transbay',
     routes: ['800', '707', '706', '703', '702', '701', 'E', 'Z', 'F', 'FS', 'G', 'CB', 'J', 'L', 'LA', 'NL', 'NX', 'NX1', 'NX2', 'NX4', 'P', 'V', 'W', 'B', 'C', 'H', 'NX3', 'NXC', 'O', 'OX', 'S', 'SB'],
-    direction: [-1, 4],
+    direction: [-1, 2],
     index: 0,
     initIndex: 0,
   },
   {
     name: 'sanpablo',
     routes: ['72', '72M', '72R', '802'],
-    direction: [4, 0],
+    direction: [2, 0],
     index: 0,
     initIndex: 0,
   },
   {
     name: '46',
     routes: ['46', '46L'],
-    direction: [0, 4],
+    direction: [0, 2],
     index: 0,
     initIndex: 0,
   },
@@ -114,9 +114,9 @@ export default function TransitMap(props) {
         return f;
       })
       .sort(a => a.route)
-      .reverse()
-      .sort((a, b) => b.order - a.order)
       // .reverse()
+      .sort((a, b) => b.order - a.order)
+      .reverse()
       .map((f, i) => {
         const offsets = offsetGroups.filter(group => group.routes.includes(f.route));
         if (offsets[0]) {
@@ -303,6 +303,7 @@ export default function TransitMap(props) {
         btnClass='control'
       >
         <svg width={width} height={height}>
+        <rect width={width} height={height} fill='transparent' onMouseMove={() => tooltipData ? setTooltipData(null) : {}} />
           <g transform={`translate(${translate}) scale(${scale})`}>
             <g onMouseMove={hoverLine} onTouchStart={hoverLine}>
               {displayRoutes}
