@@ -313,6 +313,7 @@ export default function TransitMap(props) {
           <g transform={`translate(${translate}) scale(${scale})`}>
             <g onMouseMove={hoverLine} onTouchStart={hoverLine}>
               {displayRoutes}
+              {displayLabels}
             </g>
             {tooltipData ? (
               <g
@@ -337,9 +338,6 @@ export default function TransitMap(props) {
                 />
               </g>
             ) : null}
-            <g onMouseMove={hoverLine} onTouchStart={hoverLine}>
-              {displayLabels}
-            </g>
           </g>
         </svg>
       </MapInteractionCSS>
