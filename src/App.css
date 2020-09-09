@@ -119,6 +119,7 @@
   }
   .App .panel {
     width: unset;
+    min-height: 140px;
   }
 
   .App .panel .controls {

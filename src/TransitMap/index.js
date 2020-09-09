@@ -98,7 +98,7 @@ function overlapping(box1, box2) {
 export default function TransitMap(props) {
   const { selected, visibleClassString, colorScale, orderScale, dashScale } = props;
   const [tooltipData, setTooltipData] = useState();
-  const [ref, { width, height }] = useDimensions();
+  const [ref, { x, y, width, height }] = useDimensions();
 
   const { projection, path, translate, scale } = useMemo(() => (
     width
@@ -211,17 +211,17 @@ export default function TransitMap(props) {
       setTooltipData({
         route, color, path, order,
         status: scaleKey === '' ? 'no change' : scaleKey,
-        // x: x, // from useDimenions... will get better name
-        // y: y + 16, // from useDimenions... will get better name
-        x: -1000,
-        y: -1000,
+        x: x, // from useDimenions... will get better name
+        y: y + 16, // from useDimenions... will get better name
+        // x: -1000,
+        // y: -1000,
         offsetx: 0,
         offsety: 0,
       });
     } else {
       setTooltipData(null);
     }
-  }, [selected, routes]);
+  }, [selected, routes, x, y ]);
 
   function hoverLine(e) {
     const { pageX, pageY, target, touches } = e;

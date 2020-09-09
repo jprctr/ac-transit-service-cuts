@@ -51,6 +51,7 @@
 }
 
 .TransitMap svg {
+  position: absolute;
   overflow: visible;
 }
 
