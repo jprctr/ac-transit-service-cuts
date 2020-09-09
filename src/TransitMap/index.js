@@ -88,7 +88,7 @@ function overlapping(box1, box2) {
 }
 
 export default function TransitMap(props) {
-  const { colorScale, orderScale, dashScale } = props;
+  const { colorScale, orderScale, dashScale, visibleClassString } = props;
   const [tooltipData, setTooltipData] = useState();
   const [ref, { width, height }] = useDimensions();
 
@@ -226,7 +226,7 @@ export default function TransitMap(props) {
         key={r.route}
         id={r.route}
         transform={`translate(${r.offset.x / scale}, ${r.offset.y / scale})`}
-        className='route'
+        className={`route ${r.scaleKey === '' ? 'nochange' : r.scaleKey}`}
       >
         <path
           className='visible'
@@ -263,10 +263,12 @@ export default function TransitMap(props) {
     return routes.map((r, i) => (
       <g
         pointerEvents='none'
+        className={`${r.scaleKey === '' ? 'nochange' : r.scaleKey}`}
         key={`${r.route}-label`}
       >
         <g transform={`translate(${r.labelPos.x}, ${r.labelPos.y})`}>
           <rect
+            className='target'
             x={-size / scale}
             width={size * 2 / scale}
             height={size / scale}
@@ -274,9 +276,8 @@ export default function TransitMap(props) {
             stroke={r.color}
             strokeWidth={1 / scale}
             fillOpacity={0.75}
-            //
             cursor='pointer'
-            pointerEvents='auto'
+            // 
             data-route={r.route}
             data-status={r.scaleKey}
             data-color={r.color}
@@ -308,7 +309,7 @@ export default function TransitMap(props) {
         controlsClass='controls'
         btnClass='control'
       >
-        <svg width={width} height={height}>
+        <svg className={visibleClassString} width={width} height={height}>
         <rect width={width} height={height} fill='transparent' onMouseMove={() => tooltipData ? setTooltipData(null) : {}} />
           <g transform={`translate(${translate}) scale(${scale})`}>
             <g onMouseMove={hoverLine} onTouchStart={hoverLine}>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { scaleOrdinal } from 'd3-scale';
 
 import TransitMap from './TransitMap'
@@ -20,6 +20,21 @@ const dashScale = scaleOrdinal()
   .range([0, 0, 0, 1, 2, 3]);
 
 function App() {
+  const [visibleGroups, setVisibleGroups] = useState(typesInOrder);
+
+  function updateGroups(id) {
+    setVisibleGroups(groups => {
+      if (groups.includes(id)) {
+        const nextGroups = groups.slice().filter(group => group !== id);
+        return nextGroups.length ? nextGroups : [];
+      } else {
+        return groups.concat([id]);
+      }
+    });
+  }
+
+  const visibleClassString = visibleGroups.map(g => g === '' ? 'nochange' : g).join(' ');
+
   return (
     <div className="App">
       <div className='panel'>
@@ -31,7 +46,12 @@ function App() {
         </div>
         <div className='legend'>
           {typesInOrder.filter(t => t !== 'other').reverse().map(t => (
-            <div key={t} className='item'>
+            <div
+              key={t}
+              className='item'
+              onClick={() => updateGroups(t)}
+              style={{ opacity: visibleGroups.includes(t) ? 1 : 0.25 }}
+            >
               <div className='swatch' style={{ background: colorScale(t) }}/>
               <div className='label'>
                 {t === '' ? 'no change' : t}
@@ -41,6 +61,7 @@ function App() {
         </div>
       </div>
       <TransitMap
+        visibleClassString={visibleClassString}
         colorScale={colorScale}
         orderScale={orderScale}
         dashScale={dashScale}
