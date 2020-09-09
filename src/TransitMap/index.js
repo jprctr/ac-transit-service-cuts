@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { feature } from 'topojson';
 import sortBy from 'lodash.sortby';
 import { scaleLinear } from 'd3-scale';
@@ -96,7 +96,7 @@ function overlapping(box1, box2) {
 }
 
 export default function TransitMap(props) {
-  const { colorScale, orderScale, dashScale, visibleClassString } = props;
+  const { selected, visibleClassString, colorScale, orderScale, dashScale } = props;
   const [tooltipData, setTooltipData] = useState();
   const [ref, { width, height }] = useDimensions();
 
@@ -203,6 +203,25 @@ export default function TransitMap(props) {
       })
     ) : [];
   }, [width, path, colorScale, orderScale, dashScale, projection, scale]);
+
+  useEffect(() => {
+    const dataset = routes.find(r => r.route === selected);
+    if (dataset) {
+      const { route, scaleKey, color, path, order } = dataset;
+      setTooltipData({
+        route, color, path, order,
+        status: scaleKey === '' ? 'no change' : scaleKey,
+        // x: x, // from useDimenions... will get better name
+        // y: y + 16, // from useDimenions... will get better name
+        x: -1000,
+        y: -1000,
+        offsetx: 0,
+        offsety: 0,
+      });
+    } else {
+      setTooltipData(null);
+    }
+  }, [selected, routes]);
 
   function hoverLine(e) {
     const { pageX, pageY, target, touches } = e;
@@ -336,7 +355,7 @@ export default function TransitMap(props) {
         btnClass='control'
       >
         <svg className={visibleClassString} width={width} height={height}>
-        <rect width={width} height={height} fill='transparent' onMouseMove={() => tooltipData ? setTooltipData(null) : {}} />
+        <rect width={width} height={height} fill='transparent' onClick={() => tooltipData ? setTooltipData(null) : {}} />
           <g transform={`translate(${translate}) scale(${scale})`}>
             <g onMouseMove={hoverLine} onTouchStart={hoverLine}>
               {displayRoutes}

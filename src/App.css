@@ -6,6 +6,8 @@
 }
 
 .App .panel {
+  display: flex;
+  flex-direction: column;
   width: 200px;
   padding: 0.5em 1em;
   color: white;
@@ -21,9 +23,14 @@
   margin-bottom: 1em;
 }
 
+.App .panel .controls {
+  /*display: flex;*/
+  /*max-height: 6em;*/
+  /*flex-direction: column;*/
+}
+
 .App .panel .legend {
-  display: flex;
-  flex-direction: column;
+  /*flex: 1;*/
 }
 
 .App .panel .legend .item {
@@ -32,6 +39,9 @@
   margin-right: 0.5em;
   font-size: 0.8em;
   cursor: pointer;
+}
+.App .panel .legend .item:last-of-type {
+  margin-bottom: 0;
 }
 
 .App .panel .legend .item .swatch {
@@ -47,6 +57,62 @@
   line-height: 1em;
 }
 
+.App .panel .search {
+  display: flex;
+  /*flex: 1;*/
+  margin-top: 1em;
+  overflow: hidden;
+}
+
+.App .panel .search .react-autosuggest__container {
+  display: flex;
+  flex: auto;
+  flex-direction: column;
+}
+
+.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container {
+  /*background: #cde;*/
+  /*position: absolute;*/
+  flex: auto;
+  overflow: scroll;
+  margin: 0.5em 0;
+}
+
+.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion {
+  background: #333;
+  border: 2px solid white;
+  padding: 0.25em;
+  margin: 0.5em 0;
+  cursor: pointer;
+  display: flex;
+}
+
+.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion .status {
+  text-transform: capitalize;
+  margin: auto;
+  margin-right: 0;
+}
+
+.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion.selected {
+  background: #121212;
+}
+
+.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion.selected .label {
+  font-weight: bold;
+  font-size: 1.5em;
+}
+
+.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion .label {
+  font-size: 0.8em;
+
+}
+
 @media screen and (max-width: 768px) {
   .App {
     flex-direction: column;
@@ -54,8 +120,26 @@
   .App .panel {
     width: unset;
   }
+
+  .App .panel .controls {
+    display: flex;
+  }
+
   .App .panel .legend {
+    display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+  }
+
+  .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container {
+    position: absolute;
+    z-index: 2;
+    display: block;
+    margin-top: 2em;
+    width: calc(100vw - 2em);
+    max-height: 20em;
+  }
+  .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion {
+    background: rgba(18, 18, 18, 0.5);
   }
 }

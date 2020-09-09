@@ -10,6 +10,7 @@
     "d3-scale": "^3.2.2",
     "lodash.sortby": "^4.7.0",
     "react": "^16.13.1",
+    "react-autosuggest": "^10.0.2",
     "react-dom": "^16.13.1",
     "react-map-interaction": "^2.0.0",
     "react-scripts": "3.4.3",

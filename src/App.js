@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { scaleOrdinal } from 'd3-scale';
+import sortBy from 'lodash.sortby';
+import Autosuggest from 'react-autosuggest';
+import useDimensions from 'react-use-dimensions';
 
 import TransitMap from './TransitMap'
+import serviceChanges from './TransitMap/ac-transit-service-cuts.json';
 
 import './App.css';
 
@@ -19,8 +23,48 @@ const dashScale = scaleOrdinal()
   .domain(typesInOrder)
   .range([0, 0, 0, 1, 2, 3]);
 
+const changeType = 'change-30';
+const routes = sortBy(
+  sortBy(
+    serviceChanges.map(route => {
+      route.route = route.line;
+      route.scaleKey = route[changeType].trim();
+      route.color = colorScale(route.scaleKey);
+      route.order = orderScale(route.scaleKey);
+      return route;
+    })
+  ,r => isNaN(parseInt(r.route)) ? r.route : parseInt(r.route))
+,r => -r.order);
+
+const getSuggestions = value => {
+  const inputValue = value.trim().toLowerCase();
+  const inputLength = inputValue.length;
+  return inputLength === 0 ? routes : routes.filter(route => route.route.toLowerCase().includes(inputValue));
+};
+
+const getSuggestionValue = suggestion => suggestion.route;
+
+const renderSuggestion = (suggestion, selection) => {
+  const selected = suggestion.route === selection;
+  return (
+    <div className={`suggestion ${selected ? 'selected' : ''}`} style={{ borderColor: suggestion.color }}>
+      <div className='label'>
+        {suggestion.route}
+      </div>
+      {selected ? (
+        <div className='status'>
+          {suggestion.scaleKey === '' ? 'no change' : suggestion.scaleKey}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 function App() {
+  const [value, setValue] = useState('');
+  const [suggestions, setSuggestions] = useState(routes);
   const [visibleGroups, setVisibleGroups] = useState(typesInOrder);
+  const [ref, { width }] = useDimensions();
 
   function updateGroups(id) {
     setVisibleGroups(groups => {
@@ -36,14 +80,14 @@ function App() {
   const visibleClassString = visibleGroups.map(g => g === '' ? 'nochange' : g).join(' ');
 
   return (
-    <div className="App">
+    <div ref={ref} className="App">
       <div className='panel'>
         <div className='title'>
           Proposed AC Transit Service Cuts 
         </div>
         <div className='subtitle'>
           Fall 2020 (30% Scenario)
-        </div>
+        </div>        
         <div className='legend'>
           {typesInOrder.filter(t => t !== 'other').reverse().map(t => (
             <div
@@ -59,8 +103,24 @@ function App() {
             </div>
           ))}
         </div>
+        <div className='search'>
+          <Autosuggest
+            alwaysRenderSuggestions={width > 768}
+            suggestions={suggestions}
+            onSuggestionsFetchRequested={({ value }) => setSuggestions(getSuggestions(value))}
+            onSuggestionsClearRequested={() => setSuggestions(routes)}
+            getSuggestionValue={getSuggestionValue}
+            renderSuggestion={suggestion => renderSuggestion(suggestion, value)}
+            inputProps={{
+              placeholder: 'Search',
+              value,
+              onChange: (e, { newValue }) => setValue(newValue),
+            }}
+          />
+        </div>
       </div>
       <TransitMap
+        selected={value}
         visibleClassString={visibleClassString}
         colorScale={colorScale}
         orderScale={orderScale}
