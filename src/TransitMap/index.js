@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { feature } from 'topojson';
+import sortBy from 'lodash.sortby';
+import { scaleLinear } from 'd3-scale';
 import { geoPath, geoMercator } from 'd3-geo';
 import useDimensions from 'react-use-dimensions';
 import { MapInteractionCSS } from 'react-map-interaction';
@@ -15,21 +17,21 @@ const offsetGroups = [
   {
     name: 'transbay',
     routes: ['800', '707', '706', '703', '702', '701', 'E', 'Z', 'F', 'FS', 'G', 'CB', 'J', 'L', 'LA', 'NL', 'NX', 'NX1', 'NX2', 'NX4', 'P', 'V', 'W', 'B', 'C', 'H', 'NX3', 'NXC', 'O', 'OX', 'S', 'SB'],
-    direction: [-1, 2],
+    direction: [-2, 4],
     index: 0,
     initIndex: 0,
   },
   {
     name: 'sanpablo',
     routes: ['72', '72M', '72R', '802'],
-    direction: [2, 0],
-    index: 0,
-    initIndex: 0,
+    direction: [-4, 0],
+    index: 4,
+    initIndex: 4,
   },
   {
     name: '46',
     routes: ['46', '46L'],
-    direction: [0, 2],
+    direction: [0, 4],
     index: 0,
     initIndex: 0,
   },
@@ -81,8 +83,8 @@ function flatDeep(arr, d = 1) {
     : arr.slice();
 };
 
-function inBox(box, pos) {
-  return box.x1 <= pos[0] && pos[0] <= box.x2 && box.y1 <= pos[1] && pos[1] <= box.y2;
+function overlapping(box1, box2) {
+  return box1.x2 >= box2.x1 && box1.x1 <= box2.x2 && box1.y1 <= box2.y2 && box1.y2 >= box2.y1;
 }
 
 export default function TransitMap(props) {
@@ -104,19 +106,19 @@ export default function TransitMap(props) {
     });
     const labelPositions = [];
     return width ? (
-      acTransitRoutes.features.map(f => {
-        f.scaleKey = f.changes ? f.changes[changeType].trim() : 'other';
-        f.color = colorScale(f.scaleKey);
-        f.order = orderScale(f.scaleKey);
-        f.dash = dashScale(f.scaleKey);
-        f.path = path(f);
-        f.center = getCenter(path, f);
-        return f;
-      })
-      .sort(a => a.route)
-      // .reverse()
-      .sort((a, b) => b.order - a.order)
-      .reverse()
+      sortBy(
+        sortBy(
+          acTransitRoutes.features.map(f => {
+            f.scaleKey = f.changes ? f.changes[changeType].trim() : 'other';
+            f.color = colorScale(f.scaleKey);
+            f.order = orderScale(f.scaleKey);
+            f.dash = dashScale(f.scaleKey);
+            f.path = path(f);
+            f.center = getCenter(path, f);
+            return f;
+          })
+        , f => -f.route)
+      , f => f.order)
       .map((f, i) => {
         const offsets = offsetGroups.filter(group => group.routes.includes(f.route));
         if (offsets[0]) {
@@ -135,45 +137,53 @@ export default function TransitMap(props) {
           };
         }
 
-        // f.labelPos = f.offsetType === 'transbay' ? f.start : [f.center.x, f.center.y];
-        // f.labelPos = f.offsetType === 'transbay' ? ({
-        //     x: f.start[0],
-        //     y: f.start[1],
-        //   }) : f.center;
-
+        const size = 0.18; // 0.19; //0.2; // 0.25;
         const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
         f.start = projection(flatCoordinates.slice(0, 2));
-        let usedPositon = labelPositions.find(lp => inBox(lp, f.start));
+        // f.start = projection(flatCoordinates.slice(-2));
+        f.start[0] += f.offset.x / scale;
+        f.start[1] += f.offset.y / scale;
         let position = f.start;
+        let usedPositon = labelPositions.find(lp => overlapping(lp, {
+          x1: position[0] - size,
+          y1: position[1],
+          x2: position[0] + size,
+          y2: position[1] + size,
+        }));
+        
+        while (usedPositon) {
+          flatCoordinates.splice(0, 2);
+          let pos = f.start;
+          if (flatCoordinates.length >= 2) {
+            pos = projection(flatCoordinates.slice(0, 2));
+            pos[0] += f.offset.x / scale;
+            pos[1] += f.offset.y / scale;
+            usedPositon = labelPositions.find(lp => overlapping(lp, {
+              x1: pos[0] - size,
+              y1: pos[1],
+              x2: pos[0] + size,
+              y2: pos[1] + size,
+            }));
+          } else {
+            console.log(`default: ${f.route}`);
+            usedPositon = false;
+          }
+          position = pos;
+        }
 
-        // while (usedPositon) {
-        //   flatCoordinates.splice(0, 2);
-        //   let pos = f.start;
-        //   if (flatCoordinates.length) {
-        //     pos = projection(flatCoordinates.slice(0, 2));
-        //     usedPositon = labelPositions.find(lp => inBox(lp, pos)); // 
-        //   } else {
-        //     console.log('default');
-        //     console.log(f.route);
-        //     usedPositon = false;
-        //   }
-        //   position = pos;
-        // }
-
-        // const offset = 0.393;
-        // labelPositions.push({
-        //   x1: position[0] - offset,
-        //   y1: position[1],
-        //   x2: position[0] + offset,
-        //   y2: position[1] + offset,
-        // });
+        labelPositions.push({
+          x1: position[0] - size,
+          y1: position[1],
+          x2: position[0] + size,
+          y2: position[1] + size,
+        });
 
         f.labelPos = { x: position[0], y: position[1] };
 
         return f;
       })
     ) : [];
-  }, [width, path, colorScale, orderScale, dashScale, projection]);
+  }, [width, path, colorScale, orderScale, dashScale, projection, scale]);
 
   function hoverLine(e) {
     const { pageX, pageY, target, touches } = e;
@@ -223,9 +233,7 @@ export default function TransitMap(props) {
           d={r.path}
           stroke={r.color}
           fill='none'
-          // strokeDasharray={`${r.dash / scale} ${r.dash * 2 / scale}`}
           strokeWidth={1.5 / scale}
-          // strokeOpacity={0.75}
           strokeOpacity={0.5}
           pointerEvents='none'
         />
@@ -248,24 +256,24 @@ export default function TransitMap(props) {
     ))
   ), [routes, scale]);
 
-  const displayLabels = useMemo(() => (
-    routes.map((r, i) => (
+  const displayLabels = useMemo(() => {
+    const fontScale = scaleLinear().domain([480, 1440]).range([7, 21]);
+    const font = Math.floor(fontScale(Math.min(width, height))) || 9;
+    const size = font / 3 * 4;
+    return routes.map((r, i) => (
       <g
-      pointerEvents='none'
+        pointerEvents='none'
         key={`${r.route}-label`}
-        transform={`translate(${r.offset.x / scale}, ${r.offset.y / scale})`}
       >
         <g transform={`translate(${r.labelPos.x}, ${r.labelPos.y})`}>
           <rect
-            x={-12 / scale}
-            width={24 / scale}
-            height={12 / scale}
-            // fill={r.color}
-            fill={'#121212'}
+            x={-size / scale}
+            width={size * 2 / scale}
+            height={size / scale}
+            fill='#121212'
             stroke={r.color}
             strokeWidth={1 / scale}
             fillOpacity={0.75}
-            //
             //
             cursor='pointer'
             pointerEvents='auto'
@@ -276,13 +284,11 @@ export default function TransitMap(props) {
             data-order={i}
             data-offsetx={r.offset.x}
             data-offsety={r.offset.y}
-            //
           />
           <text
             fill='white'
-            // dx={3 / scale}
-            dy={9 / scale}
-            fontSize={9 / scale}
+            dy={font / scale}
+            fontSize={font / scale}
             textAnchor='middle'
             pointerEvents='none'
           >
@@ -291,7 +297,7 @@ export default function TransitMap(props) {
         </g>
       </g>
     ))
-  ), [routes, scale]);
+  }, [routes, width, height, scale]);
 
   return (
     <div ref={ref} className="TransitMap">

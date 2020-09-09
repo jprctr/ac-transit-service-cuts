@@ -50,6 +50,10 @@
   font-weight: bold;
 }
 
+.TransitMap svg {
+  overflow: visible;
+}
+
 .TransitMap svg path {
   cursor: pointer;
 }
