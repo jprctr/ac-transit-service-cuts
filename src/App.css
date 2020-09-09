@@ -6,8 +6,7 @@
 }
 
 .App .panel {
-  flex: 2;
-  min-width: 240px;
+  width: 200px;
   padding: 0.5em 1em;
   color: white;
 }
@@ -53,7 +52,7 @@
     flex-direction: column;
   }
   .App .panel {
-    flex: unset;
+    width: unset;
   }
   .App .panel .legend {
     flex-direction: row;

@@ -13,29 +13,37 @@ import './styles.css';
 import Winter19Routeshape from './Winter19Routeshape.json';
 import serviceChanges from './ac-transit-service-cuts.json';
 
+// not using for now
 const offsetGroups = [
-  {
-    name: 'transbay',
-    routes: ['800', '707', '706', '703', '702', '701', 'E', 'Z', 'F', 'FS', 'G', 'CB', 'J', 'L', 'LA', 'NL', 'NX', 'NX1', 'NX2', 'NX4', 'P', 'V', 'W', 'B', 'C', 'H', 'NX3', 'NXC', 'O', 'OX', 'S', 'SB'],
-    direction: [-2, 4],
-    index: 0,
-    initIndex: 0,
-  },
-  {
-    name: 'sanpablo',
-    routes: ['72', '72M', '72R', '802'],
-    direction: [-4, 0],
-    index: 4,
-    initIndex: 4,
-  },
-  {
-    name: '46',
-    routes: ['46', '46L'],
-    direction: [0, 4],
-    index: 0,
-    initIndex: 0,
-  },
+  // {
+  //   name: 'transbay',
+  //   routes: ['800', '707', '706', '703', '702', '701', 'E', 'Z', 'F', 'FS', 'G', 'CB', 'J', 'L', 'LA', 'NL', 'NX', 'NX1', 'NX2', 'NX4', 'P', 'V', 'W', 'B', 'C', 'H', 'NX3', 'NXC', 'O', 'OX', 'S', 'SB'],
+  //   direction: [-2, 4],
+  //   index: 0,
+  //   initIndex: 0,
+  // },
+  // {
+  //   name: 'sanpablo',
+  //   routes: ['72', '72M', '72R', '802'],
+  //   direction: [-4, 0],
+  //   index: 4,
+  //   initIndex: 4,
+  // },
+  // {
+  //   name: '46',
+  //   routes: ['46', '46L'],
+  //   direction: [0, 4],
+  //   index: 0,
+  //   initIndex: 0,
+  // },
 ];
+
+const manualOffsets = {
+  'B': { x: -0.25, y: -0.25 },
+  'NX1': { x: -0.375, y: 0.125 },
+  'NX3': { x: 0.5, y: 0 },
+  '14': { x: -0.375, y: -0.25 },
+};
 
 const unused = [];
 const acTransitRoutes = feature(Winter19Routeshape,  Winter19Routeshape.objects.Winter19Routeshape);
@@ -150,6 +158,12 @@ export default function TransitMap(props) {
           x2: position[0] + size,
           y2: position[1] + size,
         }));
+
+        if (manualOffsets[f.route]) {
+          position[0] += manualOffsets[f.route].x;
+          position[1] += manualOffsets[f.route].y;
+          // usedPositon = false;
+        }
         
         while (usedPositon) {
           flatCoordinates.splice(0, 2);
@@ -169,6 +183,11 @@ export default function TransitMap(props) {
             usedPositon = false;
           }
           position = pos;
+        if (manualOffsets[f.route]) {
+          position[0] += manualOffsets[f.route].x / scale;
+          position[1] += manualOffsets[f.route].y / scale;
+          // usedPositon = false;
+        }
         }
 
         labelPositions.push({
@@ -257,8 +276,15 @@ export default function TransitMap(props) {
   ), [routes, scale]);
 
   const displayLabels = useMemo(() => {
-    const fontScale = scaleLinear().domain([480, 1440]).range([7, 21]);
+    const fontScale = scaleLinear()
+    .domain([480, 1440])
+    // .domain([480, 960])
+    // .range([6, 18])
+    // .range([7, 12])
+    .range([7, 14])
+    .clamp(true);
     const font = Math.floor(fontScale(Math.min(width, height))) || 9;
+    console.log(font);
     const size = font / 3 * 4;
     return routes.map((r, i) => (
       <g
