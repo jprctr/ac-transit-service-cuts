@@ -3535,6 +3535,11 @@ cyclist@^1.0.1:
   resolved "https://registry.yarnpkg.com/d3-color/-/d3-color-2.0.0.tgz#8d625cab42ed9b8f601a1760a389f7ea9189d62e"
   integrity sha512-SPXi0TSKPD4g9tw0NMZFnR95XVgUZiBH+uUTqQuDu1OsE2zomHU7ho0FISciaPvosimixwHFl3WHLGabv6dDgQ==
 
+d3-fisheye@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/d3-fisheye/-/d3-fisheye-2.0.1.tgz#9302ac72799b6a9d48cce6dd28df8984c9205285"
+  integrity sha512-0anIXE6AVtJsQ7CKs5b01cnf2khsc5sp+Hlyld0TU5bIQON0xUPSvzNaa3fyyGHagdGuIh1slSdx8HoEDGskFg==
+
 "d3-format@1 - 2":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/d3-format/-/d3-format-2.0.0.tgz#a10bcc0f986c372b729ba447382413aabf5b0767"

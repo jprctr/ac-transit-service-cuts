@@ -3,6 +3,7 @@ import { feature } from 'topojson';
 import sortBy from 'lodash.sortby';
 import { scaleLinear } from 'd3-scale';
 import { geoPath, geoMercator } from 'd3-geo';
+import { radial } from 'd3-fisheye';
 import useDimensions from 'react-use-dimensions';
 import { MapInteractionCSS } from 'react-map-interaction';
 
@@ -12,6 +13,29 @@ import './styles.css';
 // Summer19Routeshape
 import Winter19Routeshape from './Winter19Routeshape.json';
 import serviceChanges from './ac-transit-service-cuts.json';
+
+// import ManualRoutes from './ManualRoutes/';
+
+const thirtyThree = radial()
+  .radius(2.5)
+  .distortion(1.5)
+  .smoothingRatio(0.75);
+
+const fourtySix = radial()
+  .radius(2.5)
+  .distortion(1.5)
+  .smoothingRatio(0.75);
+
+const jay = radial()
+  .radius(2.5)
+  .distortion(1.5)
+  .smoothingRatio(0.25);
+
+const fisheye = coordinate => fourtySix(thirtyThree(jay(coordinate)));
+
+  // fisheye.focus([200, 200]);
+
+  // console.log(fisheye([500, 500]));
 
 // not using for now
 const offsetGroups = [
@@ -39,10 +63,10 @@ const offsetGroups = [
 ];
 
 const manualOffsets = {
-  'B': { x: -0.25, y: -0.25 },
-  'NX1': { x: -0.375, y: 0.125 },
-  'NX3': { x: 0.5, y: 0 },
-  '14': { x: -0.375, y: -0.25 },
+  // 'B': { x: -0.25, y: -0.25 },
+  // 'NX1': { x: -0.375, y: 0.125 },
+  // 'NX3': { x: 0.5, y: 0 },
+  // '14': { x: -0.375, y: -0.25 },
 };
 
 const unused = [];
@@ -112,6 +136,12 @@ export default function TransitMap(props) {
     offsetGroups.forEach(g => {
       g.index = g.initIndex;
     });
+    if (projection) {
+      thirtyThree.focus(projection([ -122.25074308326039, 37.79930415428206 ]));
+      fourtySix.focus(projection([ -122.19203753859007, 37.74994737608997 ]));
+      jay.focus(projection([ -122.39272304308822, 37.7851476342889 ]));
+      
+    }
     const labelPositions = [];
     return width ? (
       sortBy(
@@ -147,7 +177,7 @@ export default function TransitMap(props) {
 
         const size = 0.18; // 0.19; //0.2; // 0.25;
         const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
-        f.start = projection(flatCoordinates.slice(0, 2));
+        f.start = fisheye(projection(flatCoordinates.slice(0, 2)));
         // f.start = projection(flatCoordinates.slice(-2));
         f.start[0] += f.offset.x / scale;
         f.start[1] += f.offset.y / scale;
@@ -169,7 +199,7 @@ export default function TransitMap(props) {
           flatCoordinates.splice(0, 2);
           let pos = f.start;
           if (flatCoordinates.length >= 2) {
-            pos = projection(flatCoordinates.slice(0, 2));
+            pos = fisheye(projection(flatCoordinates.slice(0, 2)));
             pos[0] += f.offset.x / scale;
             pos[1] += f.offset.y / scale;
             usedPositon = labelPositions.find(lp => overlapping(lp, {
@@ -183,12 +213,13 @@ export default function TransitMap(props) {
             usedPositon = false;
           }
           position = pos;
-        if (manualOffsets[f.route]) {
-          position[0] += manualOffsets[f.route].x / scale;
-          position[1] += manualOffsets[f.route].y / scale;
-          // usedPositon = false;
+          if (manualOffsets[f.route]) {
+            position[0] += manualOffsets[f.route].x / scale;
+            position[1] += manualOffsets[f.route].y / scale;
+            // usedPositon = false;
+          }
         }
-        }
+
 
         labelPositions.push({
           x1: position[0] - size,
@@ -354,6 +385,7 @@ export default function TransitMap(props) {
         controlsClass='controls'
         btnClass='control'
       >
+      {
         <svg className={visibleClassString} width={width} height={height}>
         <rect width={width} height={height} fill='transparent' onClick={() => tooltipData ? setTooltipData(null) : {}} />
           <g transform={`translate(${translate}) scale(${scale})`}>
@@ -386,6 +418,10 @@ export default function TransitMap(props) {
             ) : null}
           </g>
         </svg>
+      }
+        {
+          // <ManualRoutes />
+        }
       </MapInteractionCSS>
       {
         tooltipData ? (

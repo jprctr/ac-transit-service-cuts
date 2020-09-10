@@ -44,10 +44,14 @@ const getSuggestions = value => {
 
 const getSuggestionValue = suggestion => suggestion.route;
 
-const renderSuggestion = (suggestion, selection) => {
+const renderSuggestion = (suggestion, selection, mouseover) => {
   const selected = suggestion.route === selection;
   return (
-    <div className={`suggestion ${selected ? 'selected' : ''}`} style={{ borderColor: suggestion.color }}>
+    <div
+      className={`suggestion ${selected ? 'selected' : ''}`}
+      style={{ borderColor: suggestion.color }}
+      onMouseOver={mouseover}
+    >
       <div className='label'>
         {suggestion.route}
       </div>
@@ -62,6 +66,7 @@ const renderSuggestion = (suggestion, selection) => {
 
 function App() {
   const [value, setValue] = useState('');
+  const [quickValue, setQuickValue] = useState('');
   const [suggestions, setSuggestions] = useState(routes);
   const [visibleGroups, setVisibleGroups] = useState(typesInOrder);
   const [ref, { width }] = useDimensions();
@@ -110,7 +115,7 @@ function App() {
             onSuggestionsFetchRequested={({ value }) => setSuggestions(getSuggestions(value))}
             onSuggestionsClearRequested={() => setSuggestions(routes)}
             getSuggestionValue={getSuggestionValue}
-            renderSuggestion={suggestion => renderSuggestion(suggestion, value)}
+            renderSuggestion={suggestion => renderSuggestion(suggestion, value, () => setQuickValue(suggestion))}
             inputProps={{
               placeholder: 'Search',
               value,
@@ -121,6 +126,7 @@ function App() {
       </div>
       <TransitMap
         selected={value}
+        quickSelected={quickValue}
         visibleClassString={visibleClassString}
         colorScale={colorScale}
         orderScale={orderScale}
