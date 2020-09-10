@@ -105,12 +105,14 @@
 
 .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion.selected .label {
   font-weight: bold;
-  font-size: 1.5em;
 }
 
 .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion .label {
   font-size: 0.8em;
+}
 
+.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion .status {
+  font-size: 0.6em;
 }
 
 @media screen and (max-width: 768px) {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { scaleOrdinal } from 'd3-scale';
 import sortBy from 'lodash.sortby';
 import Autosuggest from 'react-autosuggest';
@@ -42,20 +42,18 @@ const getSuggestions = value => {
   return inputLength === 0 ? routes : routes.filter(route => route.route.toLowerCase().includes(inputValue));
 };
 
-const getSuggestionValue = suggestion => suggestion.route;
-
-const renderSuggestion = (suggestion, selection, mouseover) => {
-  const selected = suggestion.route === selection;
+const renderSuggestion = (suggestion, selected) => {
+  const isSelected = suggestion.route === selected;
   return (
     <div
-      className={`suggestion ${selected ? 'selected' : ''}`}
+      className={`suggestion ${isSelected ? 'selected' : ''}`}
       style={{ borderColor: suggestion.color }}
-      onMouseOver={mouseover}
+      data-route={suggestion.route}
     >
       <div className='label'>
         {suggestion.route}
       </div>
-      {selected ? (
+      {isSelected ? (
         <div className='status'>
           {suggestion.scaleKey === '' ? 'no change' : suggestion.scaleKey}
         </div>
@@ -64,9 +62,11 @@ const renderSuggestion = (suggestion, selection, mouseover) => {
   );
 };
 
+const getSuggestionValue = suggestion => suggestion.route;
+
 function App() {
   const [value, setValue] = useState('');
-  const [quickValue, setQuickValue] = useState('');
+  const [selected, setSelected] = useState('');
   const [suggestions, setSuggestions] = useState(routes);
   const [visibleGroups, setVisibleGroups] = useState(typesInOrder);
   const [ref, { width }] = useDimensions();
@@ -81,6 +81,10 @@ function App() {
       }
     });
   }
+
+  useEffect(() => {
+    setSelected(value);
+  }, [value]);
 
   const visibleClassString = visibleGroups.map(g => g === '' ? 'nochange' : g).join(' ');
 
@@ -108,14 +112,24 @@ function App() {
             </div>
           ))}
         </div>
-        <div className='search'>
+        <div
+          className='search'
+          onMouseMove={e => {
+            const { target } = e;
+            const { dataset } = target;
+            const { route } = dataset;
+            if (route) {
+              setSelected(route);
+            }
+          }}
+        >
           <Autosuggest
             alwaysRenderSuggestions={width > 768}
             suggestions={suggestions}
             onSuggestionsFetchRequested={({ value }) => setSuggestions(getSuggestions(value))}
             onSuggestionsClearRequested={() => setSuggestions(routes)}
             getSuggestionValue={getSuggestionValue}
-            renderSuggestion={suggestion => renderSuggestion(suggestion, value, () => setQuickValue(suggestion))}
+            renderSuggestion={suggestion => renderSuggestion(suggestion, selected)}
             inputProps={{
               placeholder: 'Search',
               value,
@@ -125,12 +139,12 @@ function App() {
         </div>
       </div>
       <TransitMap
-        selected={value}
-        quickSelected={quickValue}
+        selected={selected}
         visibleClassString={visibleClassString}
         colorScale={colorScale}
         orderScale={orderScale}
         dashScale={dashScale}
+        onMouseOver={() => setSelected('')}
       />
     </div>
   );

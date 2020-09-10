@@ -120,7 +120,7 @@ function overlapping(box1, box2) {
 }
 
 export default function TransitMap(props) {
-  const { selected, visibleClassString, colorScale, orderScale, dashScale } = props;
+  const { selected, visibleClassString, colorScale, orderScale, dashScale, onMouseOver } = props;
   const [tooltipData, setTooltipData] = useState();
   const [ref, { x, y, width, height }] = useDimensions();
 
@@ -377,7 +377,7 @@ export default function TransitMap(props) {
   }, [routes, width, height, scale]);
 
   return (
-    <div ref={ref} className="TransitMap">
+    <div ref={ref} className="TransitMap" onMouseOver={onMouseOver}>
       <MapInteractionCSS
         minScale={1}
         maxScale={10}
@@ -385,13 +385,23 @@ export default function TransitMap(props) {
         controlsClass='controls'
         btnClass='control'
       >
-      {
         <svg className={visibleClassString} width={width} height={height}>
-        <rect width={width} height={height} fill='transparent' onClick={() => tooltipData ? setTooltipData(null) : {}} />
+          <rect
+            width={width}
+            height={height}
+            fill='transparent'
+            onClick={() => tooltipData ? setTooltipData(null) : {}}
+            onTouchStart={() => tooltipData ? setTooltipData(null) : {}}
+            onMouseOver={() => tooltipData ? setTooltipData(null) : {}}
+          />
           <g transform={`translate(${translate}) scale(${scale})`}>
             <g onMouseMove={hoverLine} onTouchStart={hoverLine}>
-              {displayRoutes}
-              {displayLabels}
+              <g className='routes'>
+                {displayRoutes}
+              </g>
+              <g className='labels' style={{ opacity: tooltipData ? 0.1 : 1 }}>
+                {displayLabels}
+              </g>
             </g>
             {tooltipData ? (
               <g
@@ -418,10 +428,6 @@ export default function TransitMap(props) {
             ) : null}
           </g>
         </svg>
-      }
-        {
-          // <ManualRoutes />
-        }
       </MapInteractionCSS>
       {
         tooltipData ? (
