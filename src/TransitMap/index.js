@@ -288,7 +288,8 @@ export default function TransitMap(props) {
         <path
           data-route={r.route}
           // 
-          className='visible'
+          // className='visible'
+          className='highlight'
           d={r.path}
           stroke={r.color}
           fill='none'
@@ -407,57 +408,53 @@ export default function TransitMap(props) {
           </g>
         </svg>
       </MapInteractionCSS>
-      {
-        tooltipData ? (
-          <div
-            className='tooltip'
-            style={{ borderColor: tooltipData.color }}
-          >
-            <div className='column left'>
-              <div className='row'>
-                <div className='route left'>
-                  <span>
-                    {tooltipData.route === '1' ? 'BRT (1)' : tooltipData.route}
-                  </span>
-                </div>
-                <div className='area right'>
-                  <span>
-                    {tooltipData.area}
-                  </span>
-                </div>
-              </div>
-              <div className='row'>
-                <div className='status left'>
-                  <span>
-                    {tooltipData.status === '' ? 'no change' : tooltipData.status}
-                  </span>
-                </div>
-                <div className='group right'>
-                  <span>
-                    {tooltipData.group}
-                  </span>
-                </div>
-              </div>
+      <div
+        className='tooltip'
+        style={{ borderColor: tooltipData ? tooltipData.color : 'white', opacity: tooltipData ? 1 : 0 }}
+      >
+        <div className='column left'>
+          <div className='row'>
+            <div className='route left'>
+              <span>
+                {tooltipData ? tooltipData.route === '1' ? 'BRT (1)' : tooltipData.route : ''}
+              </span>
             </div>
-            <div className='column right'>
-              <div className={`row description ${tooltipData.description.length > 256 ? 'long' : 'short'}`}>
-                <div>
-                  <span>
-                    {tooltipData.description}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div
-              className='close'
-              style={{ borderColor: tooltipData.color }}
-              onClick={() => setTooltipData(null)}
-            >
-              <div>x</div>
+            <div className='area right'>
+              <span>
+                {tooltipData ? tooltipData.area : ''}
+              </span>
             </div>
           </div>
-        ) : null
-      }
+          <div className='row'>
+            <div className='status left'>
+              <span>
+                {tooltipData ? tooltipData.status === '' ? 'no change' : tooltipData.status : ''}
+              </span>
+            </div>
+            <div className='group right'>
+              <span>
+                {tooltipData ? tooltipData.group : ''}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className='column right'>
+          <div className='row description'>
+            <div>
+              <span>
+                {tooltipData ? tooltipData.description : ''}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div
+          className='close'
+          style={{ borderColor: tooltipData ? tooltipData.color : 'white' }}
+          onClick={() => setTooltipData(null)}
+        >
+          <div>x</div>
+        </div>
+      </div>
     </div>
   );
 }

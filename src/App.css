@@ -37,6 +37,7 @@
   margin-right: 0.5em;
   font-size: 0.8em;
   cursor: pointer;
+  transition: opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .App .panel .legend .item:last-of-type {
   margin-bottom: 0;
@@ -86,6 +87,7 @@
   padding: 0.125em 0.25em;
   display: flex;
   background: #2B2B2B;
+  transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion.selected  {
@@ -119,6 +121,7 @@
     width: unset;
     padding-top: 1em;
     min-height: 120px;
+    border-bottom: 1px solid #5D5D5D;
   }
 
   .App .panel .controls {
@@ -139,6 +142,7 @@
     width: calc(100vw - 2em);
     max-height: 20em;
     background-color: #2B2B2B;
+    border-bottom: 1px solid #5D5D5D;
   }
 
   .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion {

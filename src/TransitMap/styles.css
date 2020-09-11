@@ -50,6 +50,7 @@
   border: 1px solid white;
   background-color: rgba(18, 18, 18, 0.5);
   display: flex;
+  transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .TransitMap .tooltip .column {
@@ -106,6 +107,7 @@
   height: 1em;
   border: 1px solid white;
   background-color: rgba(18, 18, 18, 0.5);
+  transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .TransitMap .tooltip .close div {
@@ -133,6 +135,7 @@
 .TransitMap svg g.reduced,
 .TransitMap svg g.eliminated {
   opacity: 0;
+  transition: opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .TransitMap svg g.other path.highlight,
@@ -183,6 +186,7 @@
 }
 
 .TransitMap svg g.labels g g {
+  transition: opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1);
   opacity: 1;
 }
 
