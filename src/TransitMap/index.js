@@ -387,6 +387,7 @@ export default function TransitMap(props) {
               <g
                 key={`${tooltipData.route}-highlight`}
                 id={`${tooltipData.route}-highlight`}
+                className='spotlight'
                 pointerEvents='none'
               >
                 <path

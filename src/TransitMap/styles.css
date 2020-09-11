@@ -177,6 +177,19 @@
   pointer-events: auto;
 }
 
+.TransitMap svg g.spotlight {
+  animation: fadein 0.125s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .TransitMap svg path {
   cursor: pointer;
 }
