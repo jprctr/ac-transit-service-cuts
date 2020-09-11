@@ -64,7 +64,12 @@ const manualOffsets = {
   // '14': { x: -0.375, y: -0.25 },
 };
 
+export const rename = {
+  '1': 'BRT/1',
+};
+
 const serviceChanges = serviceChangeData.map(change => {
+  change.line = rename[change.line] || change.line;
   change['change-15'] = change['change-15'].trim() === '' ? 'no change' : change['change-15'];
   change['change-30'] = change['change-30'].trim() === '' ? 'no change' : change['change-30'];
   return change;
@@ -74,7 +79,7 @@ const unused = [];
 const combinedRoutes = feature(CombinedWinter19Routeshape, CombinedWinter19Routeshape.objects['1']);
 const acTransitRoutes = feature(Winter19Routeshape,  Winter19Routeshape.objects.Winter19Routeshape);
 acTransitRoutes.features = acTransitRoutes.features.map(f => {
-  f.route = f.properties.PUB_RTE;
+  f.route = rename[f.properties.PUB_RTE] || f.properties.PUB_RTE;
   f.changes = serviceChanges.find(r => r.line === f.route);
   if (!f.changes) {
     unused.push(f.route);
@@ -420,7 +425,7 @@ export default function TransitMap(props) {
           <div className='row'>
             <div className='route left'>
               <span>
-                {tooltipData ? tooltipData.route === '1' ? 'BRT (1)' : tooltipData.route : ''}
+                {tooltipData ? tooltipData.route : ''}
               </span>
             </div>
             <div className='area right'>

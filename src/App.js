@@ -4,7 +4,7 @@ import sortBy from 'lodash.sortby';
 import Autosuggest from 'react-autosuggest';
 import useDimensions from 'react-use-dimensions';
 
-import TransitMap from './TransitMap'
+import TransitMap, { rename } from './TransitMap'
 import serviceChanges from './TransitMap/ac-transit-service-cuts.json';
 
 import './App.css';
@@ -23,13 +23,13 @@ const changeType = 'change-30';
 const routes = sortBy(
   sortBy(
     serviceChanges.map(route => {
-      route.route = route.line;
+      route.route = rename[route.line] || route.line;
       route.scaleKey = route[changeType].trim();
       route.scaleKey = route.scaleKey === '' ? 'no change' : route.scaleKey;
       route.color = colorScale(route.scaleKey);
       route.order = orderScale(route.scaleKey);
       return route;
-    })
+    }).filter(change => change.line !== '40-duplicate')
   ,r => isNaN(parseInt(r.route)) ? r.route : parseInt(r.route))
 ,r => -r.order);
 
