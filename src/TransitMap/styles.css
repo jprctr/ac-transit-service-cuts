@@ -180,6 +180,14 @@
   cursor: pointer;
 }
 
+.TransitMap svg g.labels g g {
+  opacity: 1;
+}
+
+.TransitMap svg g.labels.dim g g {
+  opacity: 0.25;
+}
+
 /**/
 
 @media screen and (max-width: 512px) {

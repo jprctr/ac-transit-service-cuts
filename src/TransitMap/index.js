@@ -374,7 +374,7 @@ export default function TransitMap(props) {
               <g className='routes'>
                 {displayRoutes}
               </g>
-              <g className='labels' style={{ opacity: tooltipData ? 0.1 : 1 }}>
+              <g className={`labels ${tooltipData ? 'dim' : ''}`}>
                 {displayLabels}
               </g>
             </g>
