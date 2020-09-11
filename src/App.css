@@ -24,13 +24,9 @@
 }
 
 .App .panel .controls {
-  /*display: flex;*/
-  /*max-height: 6em;*/
-  /*flex-direction: column;*/
 }
 
 .App .panel .legend {
-  /*flex: 1;*/
 }
 
 .App .panel .legend .item {
@@ -59,7 +55,6 @@
 
 .App .panel .search {
   display: flex;
-  /*flex: 1;*/
   margin-top: 1em;
   overflow: hidden;
 }
@@ -71,8 +66,6 @@
 }
 
 .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container {
-  /*background: #cde;*/
-  /*position: absolute;*/
   flex: auto;
   overflow: scroll;
   margin: 0.5em 0;
@@ -86,7 +79,7 @@
 
 .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion {
   background: #333;
-  border: 2px solid white;
+  border: 1px solid white;
   padding: 0.25em;
   margin: 0.5em 0;
   cursor: pointer;
@@ -119,6 +112,7 @@
   .App {
     flex-direction: column;
   }
+
   .App .panel {
     width: unset;
     min-height: 140px;
@@ -142,6 +136,7 @@
     width: calc(100vw - 2em);
     max-height: 20em;
   }
+
   .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion {
     background: rgba(18, 18, 18, 0.5);
   }

@@ -14,8 +14,6 @@ import './styles.css';
 import Winter19Routeshape from './Winter19Routeshape.json';
 import serviceChanges from './ac-transit-service-cuts.json';
 
-// import ManualRoutes from './ManualRoutes/';
-
 const thirtyThree = radial()
   .radius(2.5)
   .distortion(1.5)
@@ -32,10 +30,6 @@ const jay = radial()
   .smoothingRatio(0.25);
 
 const fisheye = coordinate => fourtySix(thirtyThree(jay(coordinate)));
-
-  // fisheye.focus([200, 200]);
-
-  // console.log(fisheye([500, 500]));
 
 // not using for now
 const offsetGroups = [
@@ -136,12 +130,13 @@ export default function TransitMap(props) {
     offsetGroups.forEach(g => {
       g.index = g.initIndex;
     });
+
     if (projection) {
       thirtyThree.focus(projection([ -122.25074308326039, 37.79930415428206 ]));
       fourtySix.focus(projection([ -122.19203753859007, 37.74994737608997 ]));
       jay.focus(projection([ -122.39272304308822, 37.7851476342889 ]));
-      
     }
+
     const labelPositions = [];
     return width ? (
       sortBy(
@@ -220,7 +215,6 @@ export default function TransitMap(props) {
           }
         }
 
-
         labelPositions.push({
           x1: position[0] - size,
           y1: position[1],
@@ -235,52 +229,39 @@ export default function TransitMap(props) {
     ) : [];
   }, [width, path, colorScale, orderScale, dashScale, projection, scale]);
 
+  function updateTooltip(datum) {
+    const { route, scaleKey, color, path, order, changes } = datum;
+    const status = scaleKey === '' ? 'no change' : scaleKey;
+    const { area, group, description } = changes;
+    setTooltipData({
+      route,
+      color,
+      path,
+      order,
+      area,
+      group,
+      description,
+      status,
+    });
+  }
+
   useEffect(() => {
-    const dataset = routes.find(r => r.route === selected);
-    if (dataset) {
-      const { route, scaleKey, color, path, order } = dataset;
-      setTooltipData({
-        route, color, path, order,
-        status: scaleKey === '' ? 'no change' : scaleKey,
-        x: x, // from useDimenions... will get better name
-        y: y + 16, // from useDimenions... will get better name
-        // x: -1000,
-        // y: -1000,
-        offsetx: 0,
-        offsety: 0,
-      });
+    const datum = routes.find(r => r.route === selected);
+    if (datum) {
+      updateTooltip(datum);
     } else {
       setTooltipData(null);
     }
   }, [selected, routes, x, y ]);
 
   function hoverLine(e) {
-    const { pageX, pageY, target, touches } = e;
+    const { target } = e;
     const { dataset } = target;
-    const { route, status, color, path, order, offsetx, offsety } = dataset;
-    if (route) {
+    const { route } = dataset;
+    const datum = routes.find(r => r.route === route);
+    if (datum) {
       if (!tooltipData || tooltipData.route !== route) {
-        const x = pageX !== undefined
-          ? pageX
-          : touches
-            ? touches[0].pageX
-            : 0;
-        const y = pageY !== undefined
-          ? pageY
-          : touches
-            ? touches[0].pageY
-            : 0;
-        setTooltipData({
-          x,
-          y,
-          route,
-          color,
-          path,
-          order,
-          offsetx,
-          offsety,
-          status: status === '' ? 'no change' : status,
-        });
+        updateTooltip(datum);
       }
     } else {
       if (tooltipData) {
@@ -307,19 +288,13 @@ export default function TransitMap(props) {
           pointerEvents='none'
         />
         <path
+          data-route={r.route}
           className='highlight'
           d={r.path}
           stroke={r.color}
           fill='none'
           strokeWidth={3 / scale}
           strokeOpacity='0'
-          data-route={r.route}
-          data-status={r.scaleKey}
-          data-color={r.color}
-          data-path={r.path}
-          data-order={i}
-          data-offsetx={r.offset.x}
-          data-offsety={r.offset.y}
         />
       </g>
     ))
@@ -334,7 +309,6 @@ export default function TransitMap(props) {
     .range([7, 14])
     .clamp(true);
     const font = Math.floor(fontScale(Math.min(width, height))) || 9;
-    // console.log(font);
     const size = font / 3 * 4;
     return routes.map((r, i) => (
       <g
@@ -344,6 +318,7 @@ export default function TransitMap(props) {
       >
         <g transform={`translate(${r.labelPos.x}, ${r.labelPos.y})`}>
           <rect
+            data-route={r.route}
             className='target'
             x={-size / scale}
             width={size * 2 / scale}
@@ -353,14 +328,6 @@ export default function TransitMap(props) {
             strokeWidth={1 / scale}
             fillOpacity={0.75}
             cursor='pointer'
-            // 
-            data-route={r.route}
-            data-status={r.scaleKey}
-            data-color={r.color}
-            data-path={r.path}
-            data-order={i}
-            data-offsetx={r.offset.x}
-            data-offsety={r.offset.y}
           />
           <text
             fill='white'
@@ -408,7 +375,6 @@ export default function TransitMap(props) {
                 key={`${tooltipData.route}-highlight`}
                 id={`${tooltipData.route}-highlight`}
                 pointerEvents='none'
-                transform={`translate(${tooltipData.offsetx / scale}, ${tooltipData.offsety / scale})`}
               >
                 <path
                   d={tooltipData.path}
@@ -433,17 +399,49 @@ export default function TransitMap(props) {
         tooltipData ? (
           <div
             className='tooltip'
-            style={{
-              left: tooltipData.x,
-              top: tooltipData.y,
-              borderColor: tooltipData.color,
-            }}
+            style={{ borderColor: tooltipData.color }}
           >
-            <div className='route'>
-              {tooltipData.route === '1' ? 'BRT (1)' : tooltipData.route}
+            <div className='column left'>
+              <div className='row'>
+                <div className='route left'>
+                  <span>
+                    {tooltipData.route === '1' ? 'BRT (1)' : tooltipData.route}
+                  </span>
+                </div>
+                <div className='area right'>
+                  <span>
+                    {tooltipData.area}
+                  </span>
+                </div>
+              </div>
+              <div className='row'>
+                <div className='status left'>
+                  <span>
+                    {tooltipData.status === '' ? 'no change' : tooltipData.status}
+                  </span>
+                </div>
+                <div className='group right'>
+                  <span>
+                    {tooltipData.group}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className='status'>
-              {tooltipData.status === '' ? 'no change' : tooltipData.status}
+            <div className='column right'>
+              <div className={`row description ${tooltipData.description.length > 256 ? 'long' : 'short'}`}>
+                <div>
+                  <span>
+                    {tooltipData.description}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div
+              className='close'
+              style={{ borderColor: tooltipData.color }}
+              onClick={() => setTooltipData(null)}
+            >
+              <div>x</div>
             </div>
           </div>
         ) : null

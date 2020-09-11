@@ -1,7 +1,10 @@
 .TransitMap {
+  position: relative;
   background: #121212;
   flex: 6;
 }
+
+/**/
 
 .TransitMap .controls {
   position: absolute;
@@ -28,34 +31,90 @@
   cursor: pointer;
 }
 
+/**/
+
 .TransitMap .tooltip {
   position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   pointer-events: none;
   color: white;
-  padding: 0.25em;
-  margin: 0 1em;
-  font-size: 1.25em;
+  padding: 0.25em 0.5em;
+  margin: 1em;
+  margin-right: 4.5em;
+  max-width: 768px;
   text-transform: capitalize;
   border: 1px solid white;
-  background-color: rgba(18, 18, 18, 0.75);
+  background-color: rgba(18, 18, 18, 0.5);
+  display: flex;
+}
+
+.TransitMap .tooltip .column {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  padding: 0 0.25em;
 }
 
-.TransitMap .tooltip div {
-  font-size: 0.8em;
+.TransitMap .tooltip .column .row {
+  display: flex;
+  padding: 0.5em 0;
 }
 
-.TransitMap .tooltip .route {
+.TransitMap .tooltip .column .row div.left {
+  flex: 1;
+}
+
+.TransitMap .tooltip .column .row div.right {
+  flex: 2;
+}
+
+.TransitMap .tooltip .column .row {
+  line-height: 0.9em; 
+}
+
+.TransitMap .tooltip .column .row div {
+  line-height: 0.9em;
+}
+
+.TransitMap .tooltip .column .row span {
+  font-size: 0.7em;
+}
+
+.TransitMap .tooltip .column .row div.route span {
+  font-size: 1em;
   font-weight: bold;
 }
+
+.TransitMap .tooltip .close {
+  position: absolute;
+  display: flex;
+  top: -1px;
+  right: calc(-1em - 2px);
+  width: 1em;
+  height: 1em;
+  border: 1px solid white;
+  background-color: rgba(18, 18, 18, 0.5);
+}
+
+.TransitMap .tooltip .close div {
+  font-size: 0.6em;
+  text-align: center;
+  line-height: 1em;
+  width: 1em;
+  height: 1em;
+  margin: auto;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/**/
 
 .TransitMap svg {
   position: absolute;
   overflow: visible;
 }
-
-/**/
 
 .TransitMap svg g.other,
 .TransitMap svg g.increased,
@@ -104,8 +163,6 @@
 .TransitMap svg.eliminated g.eliminated rect.target {
   pointer-events: auto;
 }
-
-/**/
 
 .TransitMap svg path {
   cursor: pointer;
