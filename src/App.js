@@ -9,7 +9,7 @@ import serviceChanges from './TransitMap/ac-transit-service-cuts.json';
 
 import './App.css';
 
-const typesInOrder = ['other', 'increased', '', 'modified', 'reduced', 'eliminated'];
+const typesInOrder = ['other', 'increased', 'no change', 'modified', 'reduced', 'eliminated'];
 
 const colorScale = scaleOrdinal()
   .domain(typesInOrder)
@@ -19,16 +19,13 @@ const orderScale = scaleOrdinal()
   .domain(typesInOrder)
   .range([1, 2, 3, 4, 5, 6]);
 
-const dashScale = scaleOrdinal()
-  .domain(typesInOrder)
-  .range([0, 0, 0, 1, 2, 3]);
-
 const changeType = 'change-30';
 const routes = sortBy(
   sortBy(
     serviceChanges.map(route => {
       route.route = route.line;
       route.scaleKey = route[changeType].trim();
+      route.scaleKey = route.scaleKey === '' ? 'no change' : route.scaleKey;
       route.color = colorScale(route.scaleKey);
       route.order = orderScale(route.scaleKey);
       return route;
@@ -73,13 +70,13 @@ function App() {
           {suggestion.route}
         </div>
         <div className='status'>
-          {suggestion.scaleKey === '' ? 'no change' : suggestion.scaleKey}
+          {suggestion.scaleKey}
         </div>
       </div>
     );
   };
 
-  const visibleClassString = visibleGroups.map(g => g === '' ? 'nochange' : g).join(' ');
+  const visibleClassString = visibleGroups.join(' ');
 
   return (
     <div ref={ref} className="App">
@@ -100,7 +97,7 @@ function App() {
             >
               <div className='swatch' style={{ background: colorScale(t) }}/>
               <div className='label'>
-                {t === '' ? 'no change' : t}
+                {t}
               </div>
             </div>
           ))}
@@ -132,11 +129,11 @@ function App() {
         </div>
       </div>
       <TransitMap
+        changeType={changeType}
         selected={value}
         visibleClassString={visibleClassString}
         colorScale={colorScale}
         orderScale={orderScale}
-        dashScale={dashScale}
         onMouseOver={() => setValue('')}
       />
     </div>

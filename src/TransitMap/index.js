@@ -13,7 +13,7 @@ import './styles.css';
 // Summer19Routeshape
 import Winter19Routeshape from './Winter19Routeshape.json';
 import CombinedWinter19Routeshape from './CombinedWinter19Routeshape.json';
-import serviceChanges from './ac-transit-service-cuts.json';
+import serviceChangeData from './ac-transit-service-cuts.json';
 
 const thirtyThree = radial()
   .radius(2.5)
@@ -64,6 +64,12 @@ const manualOffsets = {
   // '14': { x: -0.375, y: -0.25 },
 };
 
+const serviceChanges = serviceChangeData.map(change => {
+  change['change-15'] = change['change-15'].trim() === '' ? 'no change' : change['change-15'];
+  change['change-30'] = change['change-30'].trim() === '' ? 'no change' : change['change-30'];
+  return change;
+});
+
 const unused = [];
 const combinedRoutes = feature(CombinedWinter19Routeshape, CombinedWinter19Routeshape.objects['1']);
 const acTransitRoutes = feature(Winter19Routeshape,  Winter19Routeshape.objects.Winter19Routeshape);
@@ -75,8 +81,8 @@ acTransitRoutes.features = acTransitRoutes.features.map(f => {
   }
   return f;
 })
-.filter(f => f.changes); // hiding no change info routes for now
-console.warn(`no change information for: ${unused.join(', ')}`);
+.filter(f => f.changes); // hiding no info routes for now
+console.warn(`no information for: ${unused.join(', ')}`);
 
 function getCenter(path, geometry) {
   const [x, y] = path.centroid(geometry);
@@ -115,7 +121,7 @@ function overlapping(box1, box2) {
 }
 
 export default function TransitMap(props) {
-  const { selected, visibleClassString, colorScale, orderScale, dashScale, onMouseOver } = props;
+  const { changeType, selected, visibleClassString, colorScale, orderScale, onMouseOver } = props;
   const [tooltipData, setTooltipData] = useState();
   const [ref, { x, y, width, height }] = useDimensions();
 
@@ -124,8 +130,6 @@ export default function TransitMap(props) {
       ? scaleProjection(acTransitRoutes, width, height)
       : { translate: [0, 0], scale: 0 }
   ), [width, height]);
-
-  const changeType = 'change-30';
 
   const routeBackground = useMemo(() => path ? (
     <path
@@ -156,7 +160,6 @@ export default function TransitMap(props) {
             f.scaleKey = f.changes ? f.changes[changeType].trim() : 'other';
             f.color = colorScale(f.scaleKey);
             f.order = orderScale(f.scaleKey);
-            f.dash = dashScale(f.scaleKey);
             f.path = path(f);
             f.center = getCenter(path, f);
             return f;
@@ -238,11 +241,11 @@ export default function TransitMap(props) {
         return f;
       })
     ) : [];
-  }, [width, path, colorScale, orderScale, dashScale, projection, scale]);
+  }, [changeType, width, path, colorScale, orderScale, projection, scale]);
 
   function updateTooltip(datum) {
     const { route, scaleKey, color, path, order, changes } = datum;
-    const status = scaleKey === '' ? 'no change' : scaleKey;
+    const status = scaleKey;
     const { area, group, description } = changes;
     setTooltipData({
       route,
@@ -283,7 +286,7 @@ export default function TransitMap(props) {
         key={r.route}
         id={r.route}
         transform={`translate(${r.offset.x / scale}, ${r.offset.y / scale})`}
-        className={`route ${r.scaleKey === '' ? 'nochange' : r.scaleKey}`}
+        className={`route ${r.scaleKey}`}
       >
         <path
           data-route={r.route}
@@ -325,7 +328,7 @@ export default function TransitMap(props) {
     return routes.map((r, i) => (
       <g
         pointerEvents='none'
-        className={`${r.scaleKey === '' ? 'nochange' : r.scaleKey}`}
+        className={`${r.scaleKey}`}
         key={`${r.route}-label`}
       >
         <g transform={`translate(${r.labelPos.x}, ${r.labelPos.y})`}>
@@ -429,7 +432,7 @@ export default function TransitMap(props) {
           <div className='row'>
             <div className='status left'>
               <span>
-                {tooltipData ? tooltipData.status === '' ? 'no change' : tooltipData.status : ''}
+                {tooltipData ? tooltipData.status : ''}
               </span>
             </div>
             <div className='group right'>

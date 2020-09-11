@@ -130,7 +130,7 @@
 
 .TransitMap svg g.other,
 .TransitMap svg g.increased,
-.TransitMap svg g.nochange,
+.TransitMap svg g.no.change,
 .TransitMap svg g.modified,
 .TransitMap svg g.reduced,
 .TransitMap svg g.eliminated {
@@ -140,13 +140,13 @@
 
 .TransitMap svg g.other path.highlight,
 .TransitMap svg g.increased path.highlight,
-.TransitMap svg g.nochange path.highlight,
+.TransitMap svg g.no.change path.highlight,
 .TransitMap svg g.modified path.highlight,
 .TransitMap svg g.reduced path.highlight,
 .TransitMap svg g.eliminated path.highlight,
 .TransitMap svg g.other rect.target,
 .TransitMap svg g.increased rect.target,
-.TransitMap svg g.nochange rect.target,
+.TransitMap svg g.no.change rect.target,
 .TransitMap svg g.modified rect.target,
 .TransitMap svg g.reduced rect.target,
 .TransitMap svg g.eliminated rect.target {
@@ -155,7 +155,7 @@
 
 .TransitMap svg.other g.other,
 .TransitMap svg.increased g.increased,
-.TransitMap svg.nochange g.nochange,
+.TransitMap svg.no.change g.no.change,
 .TransitMap svg.modified g.modified,
 .TransitMap svg.reduced g.reduced,
 .TransitMap svg.eliminated g.eliminated {
@@ -164,13 +164,13 @@
 
 .TransitMap svg.other g.other path.highlight,
 .TransitMap svg.increased g.increased path.highlight,
-.TransitMap svg.nochange g.nochange path.highlight,
+.TransitMap svg.no.change g.no.change path.highlight,
 .TransitMap svg.modified g.modified path.highlight,
 .TransitMap svg.reduced g.reduced path.highlight,
 .TransitMap svg.eliminated g.eliminated path.highlight,
 .TransitMap svg.other g.other rect.target,
 .TransitMap svg.increased g.increased rect.target,
-.TransitMap svg.nochange g.nochange rect.target,
+.TransitMap svg.no.change g.no.change rect.target,
 .TransitMap svg.modified g.modified rect.target,
 .TransitMap svg.reduced g.reduced rect.target,
 .TransitMap svg.eliminated g.eliminated rect.target {
