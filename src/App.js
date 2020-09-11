@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { scaleOrdinal } from 'd3-scale';
 import sortBy from 'lodash.sortby';
 import Autosuggest from 'react-autosuggest';
@@ -42,35 +42,10 @@ const getSuggestions = value => {
   return inputLength === 0 ? routes : routes.filter(route => route.route.toLowerCase().includes(inputValue));
 };
 
-const renderSuggestion = (suggestion, selected) => {
-  const isSelected = suggestion.route === selected;
-  return (
-    <div
-      className={`suggestion ${isSelected ? 'selected' : ''}`}
-      data-route={suggestion.route}
-    >
-      <div
-        className='suggestionBorder'
-        style={{ borderColor: suggestion.color }}
-      >
-        <div className='label'>
-          {suggestion.route}
-        </div>
-        {isSelected ? (
-          <div className='status'>
-            {suggestion.scaleKey === '' ? 'no change' : suggestion.scaleKey}
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
-};
-
 const getSuggestionValue = suggestion => suggestion.route;
 
 function App() {
   const [value, setValue] = useState('');
-  const [selected, setSelected] = useState('');
   const [suggestions, setSuggestions] = useState(routes);
   const [visibleGroups, setVisibleGroups] = useState(typesInOrder);
   const [ref, { width }] = useDimensions();
@@ -86,9 +61,29 @@ function App() {
     });
   }
 
-  useEffect(() => {
-    setSelected(value);
-  }, [value]);
+  const renderSuggestion = (suggestion) => {
+    const isSelected = suggestion.route === value;
+    return (
+      <div
+        className={`suggestion ${isSelected ? 'selected' : ''}`}
+        data-route={suggestion.route}
+      >
+        <div
+          className='suggestionBorder'
+          style={{ borderColor: suggestion.color }}
+        >
+          <div className='label'>
+            {suggestion.route}
+          </div>
+          {isSelected ? (
+            <div className='status'>
+              {suggestion.scaleKey === '' ? 'no change' : suggestion.scaleKey}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    );
+  };
 
   const visibleClassString = visibleGroups.map(g => g === '' ? 'nochange' : g).join(' ');
 
@@ -123,7 +118,7 @@ function App() {
             const { dataset } = target;
             const { route } = dataset;
             if (route) {
-              setSelected(route);
+              setValue(route);
             }
           }}
         >
@@ -133,7 +128,7 @@ function App() {
             onSuggestionsFetchRequested={({ value }) => setSuggestions(getSuggestions(value))}
             onSuggestionsClearRequested={() => setSuggestions(routes)}
             getSuggestionValue={getSuggestionValue}
-            renderSuggestion={suggestion => renderSuggestion(suggestion, selected)}
+            renderSuggestion={suggestion => renderSuggestion(suggestion)}
             inputProps={{
               placeholder: 'Search',
               value,
@@ -143,12 +138,12 @@ function App() {
         </div>
       </div>
       <TransitMap
-        selected={selected}
+        selected={value}
         visibleClassString={visibleClassString}
         colorScale={colorScale}
         orderScale={orderScale}
         dashScale={dashScale}
-        onMouseOver={() => setSelected('')}
+        onMouseOver={() => setValue('')}
       />
     </div>
   );

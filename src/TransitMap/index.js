@@ -286,6 +286,8 @@ export default function TransitMap(props) {
         className={`route ${r.scaleKey === '' ? 'nochange' : r.scaleKey}`}
       >
         <path
+          data-route={r.route}
+          // 
           className='visible'
           d={r.path}
           stroke={r.color}
@@ -294,15 +296,17 @@ export default function TransitMap(props) {
           strokeOpacity={0.5}
           pointerEvents='none'
         />
-        <path
-          data-route={r.route}
-          className='highlight'
-          d={r.path}
-          stroke={r.color}
-          fill='none'
-          strokeWidth={3 / scale}
-          strokeOpacity='0'
-        />
+        {
+        // <path
+        //   data-route={r.route}
+        //   className='highlight'
+        //   d={r.path}
+        //   stroke={r.color}
+        //   fill='none'
+        //   strokeWidth={3 / scale}
+        //   strokeOpacity='0'
+        // />
+      }
       </g>
     ))
   ), [routes, scale]);
