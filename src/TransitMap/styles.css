@@ -54,7 +54,15 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  max-width: 16em;
+  min-width: 192px;
   padding: 0 0.25em;
+}
+
+.TransitMap .tooltip .column.right {
+  flex: auto;
+  min-width: unset;
+  max-width: unset;
 }
 
 .TransitMap .tooltip .column .row {
@@ -170,4 +178,15 @@
 
 .TransitMap svg path.highlight {
   cursor: pointer;
+}
+
+/**/
+
+@media screen and (max-width: 512px) {
+  .TransitMap .tooltip .column.right {
+    display: none;
+  }
+  .TransitMap .tooltip .column .row {
+    padding: 0.125em 0;
+  }
 }
