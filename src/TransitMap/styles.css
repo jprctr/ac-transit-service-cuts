@@ -10,6 +10,7 @@
   position: absolute;
   display: flex;
   margin: 1em;
+  margin-top: 1.25em;
   flex-direction: column;
   top: 0;
   right: 0;
@@ -25,8 +26,8 @@
   font-weight: bold;
   width: 1.5em;
   height: 1.5em;
-  background: #333;
-  border: 1px solid black;
+  background: #2B2B2B;
+  border: 1px solid #5D5D5D;
   color: white;
   cursor: pointer;
 }
@@ -42,6 +43,7 @@
   color: white;
   padding: 0.25em 0.5em;
   margin: 1em;
+  margin-top: 1.25em;
   margin-right: 4.5em;
   max-width: 768px;
   text-transform: capitalize;

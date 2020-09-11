@@ -67,19 +67,13 @@ function App() {
       <div
         className={`suggestion ${isSelected ? 'selected' : ''}`}
         data-route={suggestion.route}
+        style={{ borderColor: suggestion.color }}
       >
-        <div
-          className='suggestionBorder'
-          style={{ borderColor: suggestion.color }}
-        >
-          <div className='label'>
-            {suggestion.route}
-          </div>
-          {isSelected ? (
-            <div className='status'>
-              {suggestion.scaleKey === '' ? 'no change' : suggestion.scaleKey}
-            </div>
-          ) : null}
+        <div className='label'>
+          {suggestion.route}
+        </div>
+        <div className='status'>
+          {suggestion.scaleKey === '' ? 'no change' : suggestion.scaleKey}
         </div>
       </div>
     );

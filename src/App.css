@@ -2,21 +2,23 @@
   display: flex;
   width: 100vw;
   height: 100vh;
-  background: #333;
+  background: #2B2B2B;
 }
 
 .App .panel {
   display: flex;
   flex-direction: column;
-  width: 200px;
+  width: 256px;
   padding: 0.5em 1em;
   color: white;
+  border-right: 1px solid #5D5D5D;
 }
 
 .App .panel .title {
-  font-weight: bold;
-  font-size: 1.25em;
-  margin-bottom: 0.25em;
+  /*font-weight: bold;*/
+  font-weight: 600;
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
 }
 
 .App .panel .subtitle {
@@ -78,18 +80,15 @@
 }
 
 .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion {
-  padding: 0.25em 0;
   cursor: pointer;
-}
-
-.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion .suggestionBorder {
   border: 1px solid white;
-  padding: 0.25em;
+  margin: 0.25em 0;
+  padding: 0.125em 0.25em;
   display: flex;
-  background: #333;
+  background: #2B2B2B;
 }
 
-.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion.selected .suggestionBorder  {
+.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion.selected  {
   background: #121212;
 }
 
@@ -118,7 +117,8 @@
 
   .App .panel {
     width: unset;
-    min-height: 140px;
+    padding-top: 1em;
+    min-height: 120px;
   }
 
   .App .panel .controls {
@@ -135,12 +135,19 @@
     position: absolute;
     z-index: 2;
     display: block;
-    margin-top: 2em;
+    margin-top: 1.5em;
     width: calc(100vw - 2em);
     max-height: 20em;
+    background-color: #2B2B2B;
   }
 
   .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion {
     background: rgba(18, 18, 18, 0.5);
+  }
+}
+
+@media screen and (max-width: 512px) {
+  .App .panel {
+    font-size: 0.8em;
   }
 }
