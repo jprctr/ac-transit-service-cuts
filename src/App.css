@@ -78,22 +78,25 @@
 }
 
 .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion {
-  background: #333;
+  padding: 0.25em 0;
+  cursor: pointer;
+}
+
+.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion .suggestionBorder {
   border: 1px solid white;
   padding: 0.25em;
-  margin: 0.5em 0;
-  cursor: pointer;
   display: flex;
+  background: #333;
+}
+
+.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion.selected .suggestionBorder  {
+  background: #121212;
 }
 
 .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion .status {
   text-transform: capitalize;
   margin: auto;
   margin-right: 0;
-}
-
-.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion.selected {
-  background: #121212;
 }
 
 .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion.selected .label {

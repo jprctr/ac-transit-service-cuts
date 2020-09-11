@@ -47,17 +47,21 @@ const renderSuggestion = (suggestion, selected) => {
   return (
     <div
       className={`suggestion ${isSelected ? 'selected' : ''}`}
-      style={{ borderColor: suggestion.color }}
       data-route={suggestion.route}
     >
-      <div className='label'>
-        {suggestion.route}
-      </div>
-      {isSelected ? (
-        <div className='status'>
-          {suggestion.scaleKey === '' ? 'no change' : suggestion.scaleKey}
+      <div
+        className='suggestionBorder'
+        style={{ borderColor: suggestion.color }}
+      >
+        <div className='label'>
+          {suggestion.route}
         </div>
-      ) : null}
+        {isSelected ? (
+          <div className='status'>
+            {suggestion.scaleKey === '' ? 'no change' : suggestion.scaleKey}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 };

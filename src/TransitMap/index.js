@@ -12,6 +12,7 @@ import './styles.css';
 // Fall20Routeshape // Missing eliminated routes
 // Summer19Routeshape
 import Winter19Routeshape from './Winter19Routeshape.json';
+import CombinedWinter19Routeshape from './CombinedWinter19Routeshape.json';
 import serviceChanges from './ac-transit-service-cuts.json';
 
 const thirtyThree = radial()
@@ -64,6 +65,7 @@ const manualOffsets = {
 };
 
 const unused = [];
+const combinedRoutes = feature(CombinedWinter19Routeshape, CombinedWinter19Routeshape.objects['1']);
 const acTransitRoutes = feature(Winter19Routeshape,  Winter19Routeshape.objects.Winter19Routeshape);
 acTransitRoutes.features = acTransitRoutes.features.map(f => {
   f.route = f.properties.PUB_RTE;
@@ -74,7 +76,6 @@ acTransitRoutes.features = acTransitRoutes.features.map(f => {
   return f;
 })
 .filter(f => f.changes); // hiding no change info routes for now
-
 console.warn(`no change information for: ${unused.join(', ')}`);
 
 function getCenter(path, geometry) {
@@ -125,7 +126,17 @@ export default function TransitMap(props) {
   ), [width, height]);
 
   const changeType = 'change-30';
-  
+
+  const routeBackground = useMemo(() => path ? (
+    <path
+      key='routeBackground'
+      id='routeBackground'
+      d={path(combinedRoutes)}
+      stroke='#121212'
+      fill='none'
+    />
+  ) : null, [path]);
+
   const routes = useMemo(() => {
     offsetGroups.forEach(g => {
       g.index = g.initIndex;
@@ -263,10 +274,6 @@ export default function TransitMap(props) {
       if (!tooltipData || tooltipData.route !== route) {
         updateTooltip(datum);
       }
-    } else {
-      if (tooltipData) {
-        setTooltipData(null);
-      }
     }
   }
 
@@ -363,6 +370,7 @@ export default function TransitMap(props) {
           />
           <g transform={`translate(${translate}) scale(${scale})`}>
             <g onMouseMove={hoverLine} onTouchStart={hoverLine}>
+              {routeBackground}
               <g className='routes'>
                 {displayRoutes}
               </g>
