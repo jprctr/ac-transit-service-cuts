@@ -1,11 +1,11 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "85f4372eefb5b8a98dc71f7c98c66cc9",
+    "revision": "3befb5e58ff54f8be636e107a31bfcd5",
     "url": "/ac-transit-service-cuts/index.html"
   },
   {
-    "revision": "b05ce36e215f11d38531",
-    "url": "/ac-transit-service-cuts/static/css/main.a22c8294.chunk.css"
+    "revision": "f79f03250ed1f2cc3430",
+    "url": "/ac-transit-service-cuts/static/css/main.f0f91a01.chunk.css"
   },
   {
     "revision": "295937062163f3bf62b1",
@@ -16,8 +16,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/ac-transit-service-cuts/static/js/2.c13f601a.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "b05ce36e215f11d38531",
-    "url": "/ac-transit-service-cuts/static/js/main.99f62834.chunk.js"
+    "revision": "f79f03250ed1f2cc3430",
+    "url": "/ac-transit-service-cuts/static/js/main.79609598.chunk.js"
   },
   {
     "revision": "ebf257989383b8c0c62d",
