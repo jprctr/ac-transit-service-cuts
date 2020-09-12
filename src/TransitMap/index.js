@@ -126,7 +126,8 @@ function overlapping(box1, box2) {
 }
 
 export default function TransitMap(props) {
-  const { changeType, selected, visibleClassString, colorScale, orderScale, onMouseOver } = props;
+  const { changeType, selected, visibleClassString, colorScale, orderScale, setSearchValue } = props;
+  console.log(setSearchValue);
   const [tooltipData, setTooltipData] = useState();
   const [ref, { x, y, width, height }] = useDimensions();
 
@@ -252,6 +253,7 @@ export default function TransitMap(props) {
     const { route, scaleKey, color, path, order, changes } = datum;
     const status = scaleKey;
     const { area, group, description } = changes;
+    setSearchValue(route);
     setTooltipData({
       route,
       color,
@@ -364,7 +366,7 @@ export default function TransitMap(props) {
   }, [routes, width, height, scale]);
 
   return (
-    <div ref={ref} className="TransitMap" onMouseOver={onMouseOver}>
+    <div ref={ref} className="TransitMap" onMouseOver={() => setSearchValue('')}>
       <MapInteractionCSS
         minScale={1}
         maxScale={10}

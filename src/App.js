@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState,
+  // useEffect, useRef 
+  } from 'react';
 import { scaleOrdinal } from 'd3-scale';
 import sortBy from 'lodash.sortby';
 import Autosuggest from 'react-autosuggest';
@@ -33,10 +35,14 @@ const routes = sortBy(
   ,r => isNaN(parseInt(r.route)) ? r.route : parseInt(r.route))
 ,r => -r.order);
 
-const getSuggestions = value => {
+const getSuggestions = (value, visibleGroups) => {
   const inputValue = value.trim().toLowerCase();
   const inputLength = inputValue.length;
-  return inputLength === 0 ? routes : routes.filter(route => route.route.toLowerCase().includes(inputValue));
+  return inputLength === 0
+    // ? routes.filter(route => visibleGroups.includes(route.scaleKey))
+    // ? routes.filter(route => visibleGroups.includes(route.scaleKey))
+    ? routes
+    : routes.filter(route => route.route.toLowerCase().includes(inputValue));
 };
 
 const getSuggestionValue = suggestion => suggestion.route;
@@ -46,6 +52,17 @@ function App() {
   const [suggestions, setSuggestions] = useState(routes);
   const [visibleGroups, setVisibleGroups] = useState(typesInOrder);
   const [ref, { width }] = useDimensions();
+
+  // const routeRefs = useRef({});
+
+  // useEffect(() => {
+  //   if (routeRefs.current[value]) {
+  //     routeRefs.current[value].scrollIntoView({
+  //         behavior: 'smooth',
+  //         block: 'center',
+  //       });
+  //   }
+  // }, [value]);
 
   function updateGroups(id) {
     setVisibleGroups(groups => {
@@ -62,6 +79,7 @@ function App() {
     const isSelected = suggestion.route === value;
     return (
       <div
+        // ref={r => routeRefs.current[suggestion.route] = r}
         className={`suggestion ${isSelected ? 'selected' : ''}`}
         data-route={suggestion.route}
         style={{ borderColor: suggestion.color }}
@@ -115,9 +133,8 @@ function App() {
         >
           <Autosuggest
             alwaysRenderSuggestions={width > 768}
-            suggestions={suggestions}
-            onSuggestionsFetchRequested={({ value }) => setSuggestions(getSuggestions(value))}
-            onSuggestionsClearRequested={() => setSuggestions(routes)}
+            suggestions={suggestions.filter(route => visibleGroups.includes(route.scaleKey))}
+            onSuggestionsFetchRequested={({ value }) => setSuggestions(getSuggestions(value, visibleGroups))}
             getSuggestionValue={getSuggestionValue}
             renderSuggestion={suggestion => renderSuggestion(suggestion)}
             inputProps={{
@@ -134,7 +151,7 @@ function App() {
         visibleClassString={visibleClassString}
         colorScale={colorScale}
         orderScale={orderScale}
-        onMouseOver={() => setValue('')}
+        setSearchValue={setValue}
       />
     </div>
   );
