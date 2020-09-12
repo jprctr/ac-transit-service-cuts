@@ -214,15 +214,15 @@
 }
 
 /* g g */
-.TransitMap svg g.labels g {
+.TransitMap svg g.labels {
   transition: none;
   /*transition: opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1);*/
   opacity: 1;
 }
 
 /* g g */
-.TransitMap svg g.labels.dim g {
-  opacity: 0.25;
+.TransitMap svg g.labels.dim {
+  opacity: 0.5;
 }
 
 /**/
