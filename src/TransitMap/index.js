@@ -12,7 +12,7 @@ import './styles.css';
 // Fall20Routeshape // Missing eliminated routes
 // Summer19Routeshape
 import Winter19Routeshape from './Winter19Routeshape.json';
-import CombinedWinter19Routeshape from './CombinedWinter19Routeshape.json';
+import RouteBackground from './RouteBackground.json';
 import serviceChangeData from './ac-transit-service-cuts.json';
 
 const thirtyThree = radial()
@@ -76,7 +76,7 @@ const serviceChanges = serviceChangeData.map(change => {
 });
 
 const unused = [];
-const combinedRoutes = feature(CombinedWinter19Routeshape, CombinedWinter19Routeshape.objects['1']);
+const combinedRoutes = feature(RouteBackground, RouteBackground.objects['1']);
 const acTransitRoutes = feature(Winter19Routeshape,  Winter19Routeshape.objects.Winter19Routeshape);
 acTransitRoutes.features = acTransitRoutes.features.map(f => {
   f.route = rename[f.properties.PUB_RTE] || f.properties.PUB_RTE;
