@@ -66,6 +66,7 @@ const manualOffsets = {
 
 export const rename = {
   '1': 'BRT/1',
+  // '1': 'BRT (1)',
 };
 
 const serviceChanges = serviceChangeData.map(change => {
@@ -201,6 +202,9 @@ export default function TransitMap(props) {
 
         if (f.geometry) {
           const size = 0.18; // 0.19; //0.2; // 0.25;
+          // const size = 0.2;
+          const rectHeight = size / 3 * 4;
+          const rectWidth = Math.max(rectHeight, rectHeight / 2 * f.route.length);
           const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
           f.start = fisheye(projection(flatCoordinates.slice(0, 2)));
           // f.start = projection(flatCoordinates.slice(-2));
@@ -208,10 +212,14 @@ export default function TransitMap(props) {
           f.start[1] += f.offset.y / scale;
           let position = f.start;
           let usedPositon = labelPositions.find(lp => overlapping(lp, {
-            x1: position[0] - size,
+            // x1: position[0] - size,
+            // y1: position[1],
+            // x2: position[0] + size,
+            // y2: position[1] + size,
+            x1: position[0] - rectWidth / 2,
             y1: position[1],
-            x2: position[0] + size,
-            y2: position[1] + size,
+            x2: position[0] + rectWidth / 2,
+            y2: position[1] + rectHeight,
           }));
 
           if (manualOffsets[f.route]) {
@@ -228,10 +236,14 @@ export default function TransitMap(props) {
               pos[0] += f.offset.x / scale;
               pos[1] += f.offset.y / scale;
               usedPositon = labelPositions.find(lp => overlapping(lp, {
-                x1: pos[0] - size,
+                // x1: pos[0] - size,
+                // y1: pos[1],
+                // x2: pos[0] + size,
+                // y2: pos[1] + size,
+                x1: pos[0] - rectWidth / 2,
                 y1: pos[1],
-                x2: pos[0] + size,
-                y2: pos[1] + size,
+                x2: pos[0] + rectWidth / 2,
+                y2: pos[1] + rectHeight,
               }));
             } else {
               console.log(`default: ${f.route}`);
@@ -246,10 +258,14 @@ export default function TransitMap(props) {
           }
 
           labelPositions.push({
-            x1: position[0] - size,
+            // x1: position[0] - size,
+            // y1: position[1],
+            // x2: position[0] + size,
+            // y2: position[1] + size,
+            x1: position[0] - rectWidth / 2,
             y1: position[1],
-            x2: position[0] + size,
-            y2: position[1] + size,
+            x2: position[0] + rectWidth / 2,
+            y2: position[1] + rectHeight,
           });
 
           f.labelPos = { x: position[0], y: position[1] };
@@ -328,41 +344,52 @@ export default function TransitMap(props) {
     // .domain([480, 960])
     // .range([6, 18])
     // .range([7, 12])
-    .range([7, 14])
+    // .range([7, 14])
+    .range([8, 18])
+    // .range([9, 18])
     .clamp(true);
     const font = Math.floor(fontScale(Math.min(width, height))) || 9;
-    const size = font / 3 * 4;
-    return routes.filter(r => r.labelPos).map((r, i) => (
-      <g
-        pointerEvents='none'
-        className={`${r.scaleKey}`}
-        key={`${r.route}-label`}
-      >
-        <g transform={`translate(${r.labelPos.x}, ${r.labelPos.y})`}>
-          <rect
-            data-route={r.route}
-            className='target'
-            x={-size / scale}
-            width={size * 2 / scale}
-            height={size / scale}
-            fill='#121212'
-            stroke={r.color}
-            strokeWidth={1 / scale}
-            fillOpacity={0.75}
-            cursor='pointer'
-          />
-          <text
-            fill='white'
-            dy={font / scale}
-            fontSize={font / scale}
-            textAnchor='middle'
-            pointerEvents='none'
-          >
-            {r.route === '1' ? '1BRT' : r.route}
-          </text>
+    const rectHeight = font / 3 * 4;
+    return routes.filter(r => r.labelPos).map((r, i) => {
+      const rectWidth = Math.max(rectHeight, rectHeight / 2 * r.route.length);
+      return (
+        <g
+          pointerEvents='none'
+          className={`${r.scaleKey}`}
+          key={`${r.route}-label`}
+        >
+          <g transform={`translate(${r.labelPos.x}, ${r.labelPos.y})`}>
+            <rect
+              data-route={r.route}
+              className='target'
+              // x={-size / scale}
+              // width={size * 2 / scale}
+              // x={-size * 0.75 / scale}
+              // width={size * 1.5 / scale}
+              x={(-rectWidth / 2) / scale}
+              width={rectWidth / scale}
+              // x={(-size / 2) / scale}
+              // width={size / scale}
+              height={rectHeight / scale}
+              fill='#121212'
+              stroke={r.color}
+              strokeWidth={1 / scale}
+              fillOpacity={0.75}
+              cursor='pointer'
+            />
+            <text
+              fill='white'
+              dy={(font - 0.5) / scale}
+              fontSize={font / scale}
+              textAnchor='middle'
+              pointerEvents='none'
+            >
+              {r.route}
+            </text>
+          </g>
         </g>
-      </g>
-    ))
+      )
+    })
   }, [routes, width, height, scale]);
 
   return (

@@ -29,7 +29,8 @@
   box-sizing: content-box;
   height: 1.5em;
   position: absolute;
-  background: #2B2B2B;
+  /*background: #2B2B2B;*/
+  background: #222222;
   padding: 0;
   margin: auto;
   color: white;
@@ -215,6 +216,8 @@
 
 /* g g */
 .TransitMap svg g.labels {
+  font-family: 'Fira Sans Condensed', sans-serif;
+  font-weight: 500;
   transition: none;
   /*transition: opacity 0.25s cubic-bezier(0.25, 1, 0.5, 1);*/
   opacity: 1;

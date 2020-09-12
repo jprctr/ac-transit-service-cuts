@@ -2,7 +2,10 @@
   display: flex;
   width: 100vw;
   height: 100vh;
-  background: #2B2B2B;
+  background: #222222;
+  /*background: #2B2B2B;*/
+  /*background: #3B3B3B;*/
+  /*background-color: black;*/
   font-family: 'Fira Sans', sans-serif;
   box-sizing: border-box;
 }
@@ -13,6 +16,7 @@
   width: 256px;
   box-sizing: border-box;
   padding: 0.5em 1em;
+  padding-top: 1em;
   color: white;
   border-right: 1px solid #5D5D5D;
 }
@@ -103,7 +107,9 @@
   margin: 0.25em 0;
   padding: 0.125em 0.25em;
   display: flex;
-  background: #2B2B2B;
+  background: #222222;
+  /*background: #2B2B2B;*/
+  /*background: #3B3B3B;*/
   transition: border-color 0.25s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
@@ -131,7 +137,7 @@
 
   .App .panel {
     width: unset;
-    padding-top: 1em;
+    /*padding-top: 1em;*/
     /*min-height: 120px;*/
     border-bottom: 1px solid #5D5D5D;
   }
@@ -178,7 +184,8 @@
     /*max-width: 440px;*/
     max-width: 27.5em;
     max-height: 20em;
-    background-color: #2B2B2B;
+    /*background-color: #2B2B2B;*/
+    background: #222222;
     border-bottom: 1px solid #5D5D5D;
   }
 
