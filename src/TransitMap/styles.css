@@ -9,27 +9,35 @@
 .TransitMap .controls {
   position: absolute;
   display: flex;
-  margin: 1em;
-  margin-top: 1.25em;
   flex-direction: column;
-  top: 0;
-  right: 0;
+  top: 1.25em;
+  right: calc(1em + 2px);
 }
 
-.TransitMap .controls .control {
-  box-sizing: border-box;
+.TransitMap .controls div {
+  position: relative;
+  box-sizing: content-box;
   display: flex;
-  font-size: 1em;
   margin-bottom: 0.5em;
-  padding: 0 0.35em;
-  text-align: center;
-  font-weight: bold;
   width: 1.5em;
   height: 1.5em;
-  background: #2B2B2B;
-  border: 1px solid #5D5D5D;
-  color: white;
   cursor: pointer;
+  user-select: none;
+}
+
+.TransitMap .controls div .control {
+  box-sizing: content-box;
+  height: 1.5em;
+  position: absolute;
+  background: #2B2B2B;
+  padding: 0;
+  margin: auto;
+  color: white;
+  font-size: 1em;
+  line-height: 1em;
+  text-align: center;
+  border: 1px solid #5D5D5D;
+  width: 100%;
 }
 
 /**/
@@ -44,7 +52,8 @@
   padding: 0.25em 0.5em;
   margin: 1em;
   margin-top: 1.25em;
-  margin-right: 4.5em;
+  /*margin-right: 4.5em;*/
+  margin-right: 5em;
   max-width: 768px;
   text-transform: capitalize;
   border: 1px solid white;
@@ -57,7 +66,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  max-width: 16em;
+  width: 16em;
   min-width: 192px;
   padding: 0 0.25em;
 }
@@ -74,44 +83,50 @@
 }
 
 .TransitMap .tooltip .column .row div.left {
-  flex: 1;
-}
-
-.TransitMap .tooltip .column .row div.right {
   flex: 2;
 }
 
+.TransitMap .tooltip .column .row div.right {
+  flex: 3;
+}
+
 .TransitMap .tooltip .column .row {
-  line-height: 0.9em; 
+  line-height: 1em; 
 }
 
 .TransitMap .tooltip .column .row div {
-  line-height: 0.9em;
+  line-height: 1em;
 }
 
 .TransitMap .tooltip .column .row span {
-  font-size: 0.7em;
+  font-size: 0.8em;
+  font-family: 'Fira Sans Condensed', sans-serif;
 }
 
 .TransitMap .tooltip .column .row div.route span {
-  font-size: 1em;
-  font-weight: bold;
+  font-size: 1.5em;
+  font-weight: 500;
+  font-family: 'Fira Sans Condensed', sans-serif;
+}
+
+.TransitMap .tooltip .column .row div.status span {
+  font-family: 'Fira Sans', sans-serif;
 }
 
 .TransitMap .tooltip .close {
   position: absolute;
   display: flex;
   top: -1px;
-  right: calc(-1em - 2px);
-  width: 1em;
-  height: 1em;
+  right: calc(-1.5em - 2px);
+  width: 1.5em;
+  height: 1.5em;
   border: 1px solid white;
   background-color: rgba(18, 18, 18, 0.5);
   transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .TransitMap .tooltip .close div {
-  font-size: 0.6em;
+  font-size: 0.8em;
   text-align: center;
   line-height: 1em;
   width: 1em;
@@ -215,5 +230,8 @@
   }
   .TransitMap .tooltip .column .row {
     padding: 0.125em 0;
+  }
+  .TransitMap .tooltip .column .row div.route span {
+    line-height: 1em;
   }
 }

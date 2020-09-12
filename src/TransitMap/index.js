@@ -127,7 +127,6 @@ function overlapping(box1, box2) {
 
 export default function TransitMap(props) {
   const { changeType, selected, visibleClassString, colorScale, orderScale, setSearchValue } = props;
-  console.log(setSearchValue);
   const [tooltipData, setTooltipData] = useState();
   const [ref, { x, y, width, height }] = useDimensions();
 
@@ -143,6 +142,8 @@ export default function TransitMap(props) {
       id='routeBackground'
       d={path(combinedRoutes)}
       stroke='#121212'
+      // stroke='#333'
+      strokeWidth='1.5'
       fill='none'
     />
   ) : null, [path]);
@@ -249,22 +250,24 @@ export default function TransitMap(props) {
     ) : [];
   }, [changeType, width, path, colorScale, orderScale, projection, scale]);
 
-  function updateTooltip(datum) {
-    const { route, scaleKey, color, path, order, changes } = datum;
-    const status = scaleKey;
-    const { area, group, description } = changes;
-    setSearchValue(route);
-    setTooltipData({
-      route,
-      color,
-      path,
-      order,
-      area,
-      group,
-      description,
-      status,
-    });
-  }
+  const updateTooltip = useMemo(() => (
+    function(datum) {
+      const { route, scaleKey, color, path, order, changes } = datum;
+      const status = scaleKey;
+      const { area, group, description } = changes;
+      setSearchValue(route);
+      setTooltipData({
+        route,
+        color,
+        path,
+        order,
+        area,
+        group,
+        description,
+        status,
+      });
+    }
+  ), [setSearchValue]);
 
   useEffect(() => {
     const datum = routes.find(r => r.route === selected);
@@ -273,7 +276,7 @@ export default function TransitMap(props) {
     } else {
       setTooltipData(null);
     }
-  }, [selected, routes, x, y ]);
+  }, [updateTooltip, selected, routes, x, y ]);
 
   function hoverLine(e) {
     const { target } = e;
@@ -297,8 +300,6 @@ export default function TransitMap(props) {
       >
         <path
           data-route={r.route}
-          // 
-          // className='visible'
           className='highlight'
           d={r.path}
           stroke={r.color}
@@ -307,17 +308,6 @@ export default function TransitMap(props) {
           strokeOpacity={0.5}
           pointerEvents='none'
         />
-        {
-        // <path
-        //   data-route={r.route}
-        //   className='highlight'
-        //   d={r.path}
-        //   stroke={r.color}
-        //   fill='none'
-        //   strokeWidth={3 / scale}
-        //   strokeOpacity='0'
-        // />
-      }
       </g>
     ))
   ), [routes, scale]);
@@ -366,7 +356,7 @@ export default function TransitMap(props) {
   }, [routes, width, height, scale]);
 
   return (
-    <div ref={ref} className="TransitMap" onMouseOver={() => setSearchValue('')}>
+    <div ref={ref} className="TransitMap">
       <MapInteractionCSS
         minScale={1}
         maxScale={10}

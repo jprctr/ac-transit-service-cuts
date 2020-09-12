@@ -1,6 +1,4 @@
-import React, { useState,
-  // useEffect, useRef 
-  } from 'react';
+import React, { useState } from 'react';
 import { scaleOrdinal } from 'd3-scale';
 import sortBy from 'lodash.sortby';
 import Autosuggest from 'react-autosuggest';
@@ -38,11 +36,7 @@ const routes = sortBy(
 const getSuggestions = (value, visibleGroups) => {
   const inputValue = value.trim().toLowerCase();
   const inputLength = inputValue.length;
-  return inputLength === 0
-    // ? routes.filter(route => visibleGroups.includes(route.scaleKey))
-    // ? routes.filter(route => visibleGroups.includes(route.scaleKey))
-    ? routes
-    : routes.filter(route => route.route.toLowerCase().includes(inputValue));
+  return inputLength === 0 ? routes : routes.filter(route => route.route.toLowerCase().includes(inputValue));
 };
 
 const getSuggestionValue = suggestion => suggestion.route;
@@ -52,17 +46,6 @@ function App() {
   const [suggestions, setSuggestions] = useState(routes);
   const [visibleGroups, setVisibleGroups] = useState(typesInOrder);
   const [ref, { width }] = useDimensions();
-
-  // const routeRefs = useRef({});
-
-  // useEffect(() => {
-  //   if (routeRefs.current[value]) {
-  //     routeRefs.current[value].scrollIntoView({
-  //         behavior: 'smooth',
-  //         block: 'center',
-  //       });
-  //   }
-  // }, [value]);
 
   function updateGroups(id) {
     setVisibleGroups(groups => {
@@ -79,7 +62,6 @@ function App() {
     const isSelected = suggestion.route === value;
     return (
       <div
-        // ref={r => routeRefs.current[suggestion.route] = r}
         className={`suggestion ${isSelected ? 'selected' : ''}`}
         data-route={suggestion.route}
         style={{ borderColor: suggestion.color }}
@@ -99,12 +81,14 @@ function App() {
   return (
     <div ref={ref} className="App">
       <div className='panel'>
-        <div className='title'>
-          Proposed AC Transit Service Cuts 
+        <div className='headings'>
+          <div className='title'>
+            Proposed AC Transit Service Cuts 
+          </div>
+          <div className='subtitle'>
+            Fall 2020 (30% Scenario)
+          </div>
         </div>
-        <div className='subtitle'>
-          Fall 2020 (30% Scenario)
-        </div>        
         <div className='legend'>
           {typesInOrder.filter(t => t !== 'other').reverse().map(t => (
             <div
