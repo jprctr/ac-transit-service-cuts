@@ -87,6 +87,8 @@
   height: 1.25em;
   margin: 0;
   border-radius: 0;
+  outline: none;
+  border: 1px solid #5D5D5D;
 }
 
 .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container {
