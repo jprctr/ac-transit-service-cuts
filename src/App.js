@@ -119,6 +119,7 @@ function App() {
             alwaysRenderSuggestions={width > 768}
             suggestions={suggestions.filter(route => visibleGroups.includes(route.scaleKey))}
             onSuggestionsFetchRequested={({ value }) => setSuggestions(getSuggestions(value, visibleGroups))}
+            onSuggestionsClearRequested={() => {}}
             getSuggestionValue={getSuggestionValue}
             renderSuggestion={suggestion => renderSuggestion(suggestion)}
             inputProps={{

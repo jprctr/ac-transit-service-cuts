@@ -74,6 +74,12 @@ const serviceChanges = serviceChangeData.map(change => {
   change['change-30'] = change['change-30'].trim() === '' ? 'no change' : change['change-30'];
   return change;
 });
+const noRouteFeatures = serviceChanges
+  .filter(change => change.line.toLowerCase().includes('flex'))
+  .map(change => ({
+    route: change.line,
+    changes: change,
+  }));
 
 const unused = [];
 const combinedRoutes = feature(RouteBackground, RouteBackground.objects['1']);
@@ -87,6 +93,8 @@ acTransitRoutes.features = acTransitRoutes.features.map(f => {
   return f;
 })
 .filter(f => f.changes); // hiding no info routes for now
+acTransitRoutes.features = acTransitRoutes.features.concat(noRouteFeatures);
+
 console.warn(`no information for: ${unused.join(', ')}`);
 
 function getCenter(path, geometry) {
@@ -191,59 +199,61 @@ export default function TransitMap(props) {
           };
         }
 
-        const size = 0.18; // 0.19; //0.2; // 0.25;
-        const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
-        f.start = fisheye(projection(flatCoordinates.slice(0, 2)));
-        // f.start = projection(flatCoordinates.slice(-2));
-        f.start[0] += f.offset.x / scale;
-        f.start[1] += f.offset.y / scale;
-        let position = f.start;
-        let usedPositon = labelPositions.find(lp => overlapping(lp, {
-          x1: position[0] - size,
-          y1: position[1],
-          x2: position[0] + size,
-          y2: position[1] + size,
-        }));
+        if (f.geometry) {
+          const size = 0.18; // 0.19; //0.2; // 0.25;
+          const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
+          f.start = fisheye(projection(flatCoordinates.slice(0, 2)));
+          // f.start = projection(flatCoordinates.slice(-2));
+          f.start[0] += f.offset.x / scale;
+          f.start[1] += f.offset.y / scale;
+          let position = f.start;
+          let usedPositon = labelPositions.find(lp => overlapping(lp, {
+            x1: position[0] - size,
+            y1: position[1],
+            x2: position[0] + size,
+            y2: position[1] + size,
+          }));
 
-        if (manualOffsets[f.route]) {
-          position[0] += manualOffsets[f.route].x;
-          position[1] += manualOffsets[f.route].y;
-          // usedPositon = false;
-        }
-        
-        while (usedPositon) {
-          flatCoordinates.splice(0, 2);
-          let pos = f.start;
-          if (flatCoordinates.length >= 2) {
-            pos = fisheye(projection(flatCoordinates.slice(0, 2)));
-            pos[0] += f.offset.x / scale;
-            pos[1] += f.offset.y / scale;
-            usedPositon = labelPositions.find(lp => overlapping(lp, {
-              x1: pos[0] - size,
-              y1: pos[1],
-              x2: pos[0] + size,
-              y2: pos[1] + size,
-            }));
-          } else {
-            console.log(`default: ${f.route}`);
-            usedPositon = false;
-          }
-          position = pos;
           if (manualOffsets[f.route]) {
-            position[0] += manualOffsets[f.route].x / scale;
-            position[1] += manualOffsets[f.route].y / scale;
+            position[0] += manualOffsets[f.route].x;
+            position[1] += manualOffsets[f.route].y;
             // usedPositon = false;
           }
+          
+          while (usedPositon) {
+            flatCoordinates.splice(0, 2);
+            let pos = f.start;
+            if (flatCoordinates.length >= 2) {
+              pos = fisheye(projection(flatCoordinates.slice(0, 2)));
+              pos[0] += f.offset.x / scale;
+              pos[1] += f.offset.y / scale;
+              usedPositon = labelPositions.find(lp => overlapping(lp, {
+                x1: pos[0] - size,
+                y1: pos[1],
+                x2: pos[0] + size,
+                y2: pos[1] + size,
+              }));
+            } else {
+              console.log(`default: ${f.route}`);
+              usedPositon = false;
+            }
+            position = pos;
+            if (manualOffsets[f.route]) {
+              position[0] += manualOffsets[f.route].x / scale;
+              position[1] += manualOffsets[f.route].y / scale;
+              // usedPositon = false;
+            }
+          }
+
+          labelPositions.push({
+            x1: position[0] - size,
+            y1: position[1],
+            x2: position[0] + size,
+            y2: position[1] + size,
+          });
+
+          f.labelPos = { x: position[0], y: position[1] };
         }
-
-        labelPositions.push({
-          x1: position[0] - size,
-          y1: position[1],
-          x2: position[0] + size,
-          y2: position[1] + size,
-        });
-
-        f.labelPos = { x: position[0], y: position[1] };
 
         return f;
       })
@@ -322,7 +332,7 @@ export default function TransitMap(props) {
     .clamp(true);
     const font = Math.floor(fontScale(Math.min(width, height))) || 9;
     const size = font / 3 * 4;
-    return routes.map((r, i) => (
+    return routes.filter(r => r.labelPos).map((r, i) => (
       <g
         pointerEvents='none'
         className={`${r.scaleKey}`}
