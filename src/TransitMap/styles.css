@@ -75,6 +75,7 @@
 
 .TransitMap .tooltip .column.right {
   flex: auto;
+  text-transform: none;
   min-width: unset;
   max-width: unset;
   overflow: hidden;
