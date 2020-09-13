@@ -81,11 +81,16 @@
   flex: auto;
   flex-direction: column;
 }
+
 .App .panel .search .react-autosuggest__container .react-autosuggest__input {
-  height: 1.25em;
+  font-size: 0.8em;
+  line-height: 1.5em;
+  padding: 0.125em 0.25em;
   margin: 0;
   border-radius: 0;
   outline: none;
+  font-family: 'Fira Sans Condensed', sans-serif;
+  font-weight: 500;
   border: 1px solid #5D5D5D;
 }
 
@@ -166,21 +171,22 @@
     margin-top: 0.5em;
     margin-bottom: 0.25em;
     max-width: 27.5em;
+    width: calc(100vw - 6em - 1px);
   }
 
   .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container {
     position: absolute;
     z-index: 2;
     display: block;
-    /*margin-top: 1.5em;*/
-    margin-top: calc(2em + 2px);
-    width: calc(100vw - 2em);
-    /*max-width: 440px;*/
+    margin-top: 2em;
+    width: calc(100vw - 6em - 1px);
     max-width: 27.5em;
     max-height: 20em;
-    /*background-color: #2B2B2B;*/
     background: #222222;
-    border-bottom: 1px solid #5D5D5D;
+  }
+
+  .react-autosuggest__suggestions-container--open {
+    border-bottom: 1px solid #5D5D5D; 
   }
 
   .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion {
@@ -196,12 +202,14 @@
   }
 
   .App .panel .legend .item {
+    font-size: 0.8em;
     margin-right: 1em;
     font-family: 'Fira Sans Condensed', sans-serif;
   }
 
   .App .panel .legend .item .label {
-    font-size: 1.0625em;
+    font-size: 0.9em;
+    line-height: 1.25em;
   }
 
   .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container {
