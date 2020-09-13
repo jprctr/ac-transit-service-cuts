@@ -15,22 +15,25 @@ import Winter19Routeshape from './Winter19Routeshape.json';
 import RouteBackground from './RouteBackground.json';
 import serviceChangeData from './ac-transit-service-cuts.json';
 
-const thirtyThree = radial()
-  .radius(2.5)
-  .distortion(1.5)
-  .smoothingRatio(0.75);
+const ashby = {
+  focus: [-122.269361, 37.854422],
+  distort: radial()
+          .radius(2)
+          .distortion(1.25)
+          .smoothingRatio(0.25),
+};
 
-const fourtySix = radial()
-  .radius(2.5)
-  .distortion(1.5)
-  .smoothingRatio(0.75);
+const fruitvale = {
+  focus: [-122.224154, 37.774836],
+  distort: radial()
+          .radius(2)
+          .distortion(1.25)
+          .smoothingRatio(0.25),
+};
 
-const jay = radial()
-  .radius(2.5)
-  .distortion(1.5)
-  .smoothingRatio(0.25);
-
-const fisheye = coordinate => fourtySix(thirtyThree(jay(coordinate)));
+function applyDistortion(coordinate) {
+  return ashby.distort(fruitvale.distort(coordinate));
+}
 
 // not using for now
 const offsetGroups = [
@@ -163,9 +166,8 @@ export default function TransitMap(props) {
     });
 
     if (projection) {
-      thirtyThree.focus(projection([ -122.25074308326039, 37.79930415428206 ]));
-      fourtySix.focus(projection([ -122.19203753859007, 37.74994737608997 ]));
-      jay.focus(projection([ -122.39272304308822, 37.7851476342889 ]));
+      ashby.distort.focus(projection(ashby.focus));
+      fruitvale.distort.focus(projection(fruitvale.focus));
     }
 
     const labelPositions = [];
@@ -206,7 +208,8 @@ export default function TransitMap(props) {
           const rectHeight = size / 3 * 4;
           const rectWidth = Math.max(rectHeight, rectHeight / 2 * f.route.length);
           const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
-          f.start = fisheye(projection(flatCoordinates.slice(0, 2)));
+          f.start = applyDistortion(projection(flatCoordinates.slice(0, 2)));
+          // f.start = fisheye(projection(flatCoordinates.slice(0, 2)));
           // f.start = projection(flatCoordinates.slice(-2));
           f.start[0] += f.offset.x / scale;
           f.start[1] += f.offset.y / scale;
@@ -232,7 +235,8 @@ export default function TransitMap(props) {
             flatCoordinates.splice(0, 2);
             let pos = f.start;
             if (flatCoordinates.length >= 2) {
-              pos = fisheye(projection(flatCoordinates.slice(0, 2)));
+              pos = applyDistortion(projection(flatCoordinates.slice(0, 2)));
+              // pos = fisheye(projection(flatCoordinates.slice(0, 2)));
               pos[0] += f.offset.x / scale;
               pos[1] += f.offset.y / scale;
               usedPositon = labelPositions.find(lp => overlapping(lp, {
