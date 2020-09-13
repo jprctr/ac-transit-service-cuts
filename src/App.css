@@ -15,7 +15,7 @@
   padding: 0.5em 1em;
   padding-top: 1em;
   color: white;
-  border-right: 1px solid #5D5D5D;
+  border: 1px solid #5D5D5D;
 }
 
 .App .panel .headings {
@@ -134,7 +134,7 @@
 
   .App .panel {
     width: unset;
-    border-bottom: 1px solid #5D5D5D;
+    /*border-bottom: 1px solid #5D5D5D;*/
   }
 
   .App .panel .headings .title {
