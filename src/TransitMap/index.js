@@ -378,7 +378,8 @@ export default function TransitMap(props) {
               fill='#121212'
               stroke={r.color}
               strokeWidth={1 / scale}
-              fillOpacity={0.75}
+              // fillOpacity={0.75}
+              fillOpacity={0.5}
               cursor='pointer'
             />
             <text

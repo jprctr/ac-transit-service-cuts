@@ -189,9 +189,9 @@
     border-bottom: 1px solid #5D5D5D; 
   }
 
-  .App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion {
-    background: rgba(18, 18, 18, 0.5);
-  }
+  /*.App .panel .search .react-autosuggest__container .react-autosuggest__suggestions-container ul li .suggestion {*/
+    /*background: rgba(18, 18, 18, 0.5);*/
+  /*}*/
 }
 
 @media screen and (max-width: 512px) {
