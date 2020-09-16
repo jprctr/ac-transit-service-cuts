@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { feature } from 'topojson';
 import sortBy from 'lodash.sortby';
 import { scaleLinear } from 'd3-scale';
-import { geoPath, geoMercator } from 'd3-geo';
+import { geoPath, geoMercator, geoBounds } from 'd3-geo';
 import { radial } from 'd3-fisheye';
 import useDimensions from 'react-use-dimensions';
 import { MapInteractionCSS } from 'react-map-interaction';
+import mapboxgl from 'mapbox-gl';
 
 import './styles.css';
 
@@ -14,6 +15,11 @@ import './styles.css';
 import Winter19Routeshape from './Winter19Routeshape.json';
 import RouteBackground from './RouteBackground.json';
 import serviceChangeData from './ac-transit-service-cuts.json';
+
+//
+console.log(process.env.REACT_APP_MAPBOX_TOKEN);
+let map;
+mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN;
 
 const ashby = {
   focus: [-122.269361, 37.854422],
@@ -34,6 +40,8 @@ const fruitvale = {
 function applyDistortion(coordinate) {
   return ashby.distort(fruitvale.distort(coordinate));
 }
+
+
 
 // not using for now
 const offsetGroups = [
@@ -139,8 +147,51 @@ function overlapping(box1, box2) {
 
 export default function TransitMap(props) {
   const { changeType, selected, visibleClassString, colorScale, orderScale, setSearchValue } = props;
+  // const [mapSettings, setMapSettigns] = useState();
   const [tooltipData, setTooltipData] = useState();
   const [ref, { x, y, width, height }] = useDimensions();
+  const mapContainer = useRef();
+
+  // console.log(mapContainer);
+  useEffect(() => {
+    if (mapContainer.current) {
+      const bounds = geoBounds(acTransitRoutes);
+      console.log(bounds);
+      const oakland = [-122.271168, 37.804323];
+      map = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/dark-v10',
+        center: oakland,
+        zoom: 10,
+      });
+      map.fitBounds(bounds, { padding: 16 });
+
+      // const scale = (512) * 0.5 / Math.PI * Math.pow(2, map.getZoom());
+      // setMapSettigns({
+      //   center: map.getCenter(),
+      //   scale,
+      // });
+    }
+  }, [mapContainer]);
+
+  // const { projection, path, translate, scale } = useMemo(() => {
+  //     const transform = { translate: [0, 0], scale: 1 };
+  //     if (width && height && mapSettings) {
+  //       console.log(mapSettings);
+  //       const { center, scale } = mapSettings;
+  //       const projection = geoMercator()
+  //         .center([center.lng, center.lat])
+  //         .translate([width / 2, height / 2])
+  //         .scale(scale);
+  //       const path = geoPath().projection(projection);
+  //       return {
+  //         ...transform,
+  //         projection,
+  //         path,
+  //       };
+  //     }
+  //     return transform;
+  // }, [width, height, mapSettings]);
 
   const { projection, path, translate, scale } = useMemo(() => (
     width
@@ -148,12 +199,14 @@ export default function TransitMap(props) {
       : { translate: [0, 0], scale: 0 }
   ), [width, height]);
 
+
   const routeBackground = useMemo(() => path ? (
     <path
       key='routeBackground'
       id='routeBackground'
       d={path(combinedRoutes)}
-      stroke='#121212'
+      // stroke='#121212'
+      stroke='transparent'
       // stroke='#333'
       strokeWidth='1.5'
       fill='none'
@@ -171,7 +224,7 @@ export default function TransitMap(props) {
     }
 
     const labelPositions = [];
-    return width ? (
+    return width && path ? (
       sortBy(
         sortBy(
           acTransitRoutes.features.map(f => {
@@ -399,6 +452,8 @@ export default function TransitMap(props) {
 
   return (
     <div ref={ref} className="TransitMap">
+      
+      {}
       <MapInteractionCSS
         minScale={1}
         maxScale={10}
@@ -406,6 +461,9 @@ export default function TransitMap(props) {
         controlsClass='controls'
         btnClass='control'
       >
+      
+    
+      <div ref={mapContainer} className="mapbox" style={{ width, height }} />
         <svg className={visibleClassString} width={width} height={height}>
           <rect
             width={width}
