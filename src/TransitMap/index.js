@@ -103,10 +103,10 @@ const noRouteFeatures = serviceChanges
   .map(change => ({
     route: change.line,
     changes: change,
-    geometry: {
-      coordinates: [],
-      type: "MultiLineString",
-    },
+    // geometry: {
+    //   coordinates: [],
+    //   type: "MultiLineString",
+    // },
   }));
 
 const unused = [];
@@ -181,7 +181,7 @@ export default function TransitMap(props) {
   const { changeType, selected, visibleGroups, colorScale, orderScale, setSearchValue } = props;
   // const [mapSettings, setMapSettigns] = useState();
   // const [routes, setRoutes] = useState();
-  const [viewport, setViewport] = useState();
+  // const [viewport, setViewport] = useState();
   const [tooltipData, setTooltipData] = useState();
   const [ref, { x, y, width, height }] = useDimensions();
   // const mapContainer = useRef();
@@ -233,8 +233,10 @@ export default function TransitMap(props) {
     //   ashby.distort.focus(projection(ashby.focus));
     //   fruitvale.distort.focus(projection(fruitvale.focus));
     // }
-
-    // const labelPositions = [];
+    // const size = 0.18;
+    const size = 0.0072; // min: 0.005;
+    const rectHeight = size / 3 * 4;
+    const labelPositions = [];
     // return width && path ? (
     return (
       sortBy(
@@ -245,6 +247,49 @@ export default function TransitMap(props) {
             f.order = orderScale(f.scaleKey);
             // f.path = path(f);
             // f.center = getCenter(path, f);
+            if (f.geometry) {
+              // f.bounds = geoBounds(f);
+              const rectWidth = Math.max(rectHeight, rectHeight / 2 * f.route.length);
+              const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
+              //
+              f.start = flatCoordinates.slice(0, 2);
+              let position = f.start;
+              let usedPositon = labelPositions.find(lp => overlapping(lp, {
+                x1: position[0] - rectWidth / 2,
+                y1: position[1],
+                x2: position[0] + rectWidth / 2,
+                y2: position[1] + rectHeight,
+              }));
+
+              while (usedPositon) {
+                flatCoordinates.splice(0, 2);
+                let pos = f.start;
+                if (flatCoordinates.length >= 2) {
+                  pos = flatCoordinates.slice(0, 2);
+                  usedPositon = labelPositions.find(lp => overlapping(lp, {
+                    x1: pos[0] - rectWidth / 2,
+                    y1: pos[1],
+                    x2: pos[0] + rectWidth / 2,
+                    y2: pos[1] + rectHeight,
+                  }));
+                } else {
+                  console.log(`default: ${f.route}`);
+                  usedPositon = false;
+                }
+                position = pos;
+              }
+
+              labelPositions.push({
+                x1: position[0] - rectWidth / 2,
+                y1: position[1],
+                x2: position[0] + rectWidth / 2,
+                y2: position[1] + rectHeight,
+              });
+
+              f.labelPos = position; // { x: position[0], y: position[1] };
+              //
+            }
+
             return f;
           })
         , f => -f.route)
@@ -273,7 +318,7 @@ export default function TransitMap(props) {
       //     // const size = 0.2;
       //     const rectHeight = size / 3 * 4;
       //     const rectWidth = Math.max(rectHeight, rectHeight / 2 * f.route.length);
-      //     const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
+          // const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
       //     f.start = applyDistortion(projection(flatCoordinates.slice(0, 2)));
       //     // f.start = fisheye(projection(flatCoordinates.slice(0, 2)));
       //     // f.start = projection(flatCoordinates.slice(-2));
@@ -347,7 +392,7 @@ export default function TransitMap(props) {
   }, [changeType, colorScale, orderScale]);
 
   const displayRoutes = useMemo(() => (
-    routes.filter(route => visibleGroups.includes(route.scaleKey))
+    routes.filter(route => visibleGroups.includes(route.scaleKey) && route.geometry)
   ), [routes, visibleGroups]);
 
   // const highlightRoute = useMemo(() => (selected ? routes.filter(feature => feature.route === selected) : []), [routes]);
@@ -817,26 +862,33 @@ export default function TransitMap(props) {
       //   getLineColor: 250,
       // },
     }),
-    // new TextLayer({
-    //   id: 'route-labels',
-    //   data: displayRoutes,
-    //   pickable: true,
-    //   onHover: hoverLine,
-    //   getText: route => route.route,
-    //   getPosition: route => geoCentroid(route),
-    //   // getPosition: route => route.geometry.coordinates,
-    //   // getColor: d => DEFAULT_COLOR,
-    //   // getColor: route => hexToRgb(colorScale(route.scaleKey)),
-    //   // getColor: route => !selected || route.route === selected ? [255, 255, 255] : [255, 255, 255, 10],
-    //   opacity: selected ? 0.001 : 1,
-    //   getColor: [255, 255, 255],
-    //   getSize: 16,
-    //   sizeScale: 1,
-    //   // updateTriggers: {
-    //   //   getColor: {selected},
-    //   // },
-    //   // sizeScale: fontSize / 20
-    // }),
+    new TextLayer({
+      id: 'route-labels',
+      data: displayRoutes,
+      pickable: true,
+      onHover: hoverLine,
+      getText: route => route.route,
+      // getPosition: route => geoCentroid(route),
+      getPosition: route => route.labelPos,
+      // getPosition: route => route.geometry.coordinates,
+      // getColor: d => DEFAULT_COLOR,
+      // getColor: route => hexToRgb(colorScale(route.scaleKey)),
+      // getColor: route => !selected || route.route === selected ? [255, 255, 255] : [255, 255, 255, 10],
+      opacity: selected ? 0.001 : 1,
+      getColor: [255, 255, 255],
+      // backgroundColor: [18, 18, 18],
+      // backgroundColor: [255, 255, 255],
+      // backgroundColor: route => hexToRgb(colorScale(route.scaleKey)),
+      // opacity: 0.5,
+      // getSize: 16,
+      sizeMinPixels: 0,
+      sizeMaxPixels: 16,
+      // sizeScale: 1,
+      // updateTriggers: {
+      //   getColor: {selected},
+      // },
+      // sizeScale: fontSize / 20
+    }),
   ];
 
   const bounds = geoBounds(acTransitRoutes);
