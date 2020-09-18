@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { scaleOrdinal } from 'd3-scale';
 import sortBy from 'lodash.sortby';
 import Autosuggest from 'react-autosuggest';
@@ -43,9 +43,15 @@ const getSuggestionValue = suggestion => suggestion.route;
 
 function App() {
   const [value, setValue] = useState('');
+  const [searchValue, setSearchValue] = useState('');
   const [suggestions, setSuggestions] = useState(routes);
   const [visibleGroups, setVisibleGroups] = useState(typesInOrder);
   const [ref, { width }] = useDimensions();
+
+  useEffect(() => {
+    setValue(searchValue);
+    setSuggestions(getSuggestions(searchValue, visibleGroups));
+  }, [searchValue, visibleGroups]);
 
   function updateGroups(id) {
     setVisibleGroups(groups => {
@@ -76,7 +82,7 @@ function App() {
     );
   };
 
-  const visibleClassString = visibleGroups.join(' ');
+  // const visibleClassString = visibleGroups.join(' ');
 
   return (
     <div ref={ref} className="App">
@@ -122,6 +128,7 @@ function App() {
             onSuggestionsClearRequested={() => {}}
             getSuggestionValue={getSuggestionValue}
             renderSuggestion={suggestion => renderSuggestion(suggestion)}
+            shouldRenderSuggestions={() => true}
             inputProps={{
               placeholder: 'Search',
               value,
@@ -133,10 +140,11 @@ function App() {
       <TransitMap
         changeType={changeType}
         selected={value}
-        visibleClassString={visibleClassString}
+        // visibleClassString={visibleClassString}
+        visibleGroups={visibleGroups}
         colorScale={colorScale}
         orderScale={orderScale}
-        setSearchValue={setValue}
+        setSearchValue={setSearchValue}
       />
     </div>
   );

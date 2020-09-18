@@ -1,25 +1,34 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo
+  // , useRef 
+} from 'react';
 import { feature } from 'topojson';
 import sortBy from 'lodash.sortby';
+import { group } from 'd3-array';
 import { scaleLinear } from 'd3-scale';
 import { geoPath, geoMercator, geoBounds } from 'd3-geo';
 import { radial } from 'd3-fisheye';
 import useDimensions from 'react-use-dimensions';
-import { MapInteractionCSS } from 'react-map-interaction';
-import mapboxgl from 'mapbox-gl';
+// import { MapInteractionCSS } from 'react-map-interaction';
+// import mapboxgl from 'mapbox-gl';
+import bbox from '@turf/bbox';
+import { StaticMap } from 'react-map-gl';
+import { fitBounds } from 'viewport-mercator-project';
+import DeckGL from '@deck.gl/react';
+import { GeoJsonLayer } from '@deck.gl/layers';
 
 import './styles.css';
 
 // Fall20Routeshape // Missing eliminated routes
 // Summer19Routeshape
-import Winter19Routeshape from './Winter19Routeshape.json';
+import Winter19Routeshape from './Winter19Routeshape.geo.json';
+// import Winter19Routeshape from './Winter19Routeshape.json';
 import RouteBackground from './RouteBackground.json';
 import serviceChangeData from './ac-transit-service-cuts.json';
 
 //
 console.log(process.env.REACT_APP_MAPBOX_TOKEN);
-let map;
-mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN;
+// let maap;
+// mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN;
 
 const ashby = {
   focus: [-122.269361, 37.854422],
@@ -91,11 +100,17 @@ const noRouteFeatures = serviceChanges
   .map(change => ({
     route: change.line,
     changes: change,
+    geometry: {
+      coordinates: [],
+      type: "MultiLineString",
+    },
   }));
 
 const unused = [];
 const combinedRoutes = feature(RouteBackground, RouteBackground.objects['1']);
-const acTransitRoutes = feature(Winter19Routeshape,  Winter19Routeshape.objects.Winter19Routeshape);
+// const acTransitRoutes = feature(Winter19Routeshape,  Winter19Routeshape.objects.Winter19Routeshape);
+const acTransitRoutes = Winter19Routeshape;
+// console.log(acTransitRoutes)
 acTransitRoutes.features = acTransitRoutes.features.map(f => {
   f.route = rename[f.properties.PUB_RTE] || f.properties.PUB_RTE;
   f.changes = serviceChanges.find(r => r.line === f.route);
@@ -145,34 +160,193 @@ function overlapping(box1, box2) {
   return box1.x2 >= box2.x1 && box1.x1 <= box2.x2 && box1.y1 <= box2.y2 && box1.y2 >= box2.y1;
 }
 
+function mapToNest(map) {
+  return Array.from(map, ([key, values]) => ({key, values}));
+}
+
+
+function hexToRgb(hex) {
+  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? [
+    parseInt(result[1], 16),
+    parseInt(result[2], 16),
+    parseInt(result[3], 16)
+  ] : null;
+}
+
 export default function TransitMap(props) {
-  const { changeType, selected, visibleClassString, colorScale, orderScale, setSearchValue } = props;
+  const { changeType, selected, visibleGroups, colorScale, orderScale, setSearchValue } = props;
   // const [mapSettings, setMapSettigns] = useState();
+  // const [routes, setRoutes] = useState();
   const [tooltipData, setTooltipData] = useState();
   const [ref, { x, y, width, height }] = useDimensions();
-  const mapContainer = useRef();
+  // const mapContainer = useRef();
 
   // console.log(mapContainer);
-  useEffect(() => {
-    if (mapContainer.current) {
-      const bounds = geoBounds(acTransitRoutes);
-      console.log(bounds);
-      const oakland = [-122.271168, 37.804323];
-      map = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/dark-v10',
-        center: oakland,
-        zoom: 10,
-      });
-      map.fitBounds(bounds, { padding: 16 });
+  // useEffect(() => {
+  //   if (mapContainer.current) {
+  //     const bounds = geoBounds(acTransitRoutes);
+  //     console.log(bounds);
+  //     const oakland = [-122.271168, 37.804323];
+  //     map = new mapboxgl.Map({
+  //       container: mapContainer.current,
+  //       style: 'mapbox://styles/mapbox/dark-v10',
+  //       center: oakland,
+  //       zoom: 10,
+  //     });
+  //     map.fitBounds(bounds, { padding: 16 });
 
-      // const scale = (512) * 0.5 / Math.PI * Math.pow(2, map.getZoom());
-      // setMapSettigns({
-      //   center: map.getCenter(),
-      //   scale,
-      // });
-    }
-  }, [mapContainer]);
+  //     // const scale = (512) * 0.5 / Math.PI * Math.pow(2, map.getZoom());
+  //     // setMapSettigns({
+  //     //   center: map.getCenter(),
+  //     //   scale,
+  //     // });
+  //   }
+  // }, [mapContainer]);
+  // useEffect(() => {
+  //   acTransitRoutes.features = sortBy(
+  //     sortBy(
+  //       acTransitRoutes.features.map(f => {
+  //         f.scaleKey = f.changes ? f.changes[changeType].trim() : 'other';
+  //         f.color = colorScale(f.scaleKey);
+  //         f.order = orderScale(f.scaleKey);
+  //         // f.path = path(f);
+  //         // f.center = getCenter(path, f);
+  //         return f;
+  //       })
+  //     , f => -f.route)
+  //   , f => f.order);
+  //   setRoutes(acTransitRoutes);
+  // }, []);
+
+
+  const routes = useMemo(() => {
+    // offsetGroups.forEach(g => {
+    //   g.index = g.initIndex;
+    // });
+
+    // if (projection) {
+    //   ashby.distort.focus(projection(ashby.focus));
+    //   fruitvale.distort.focus(projection(fruitvale.focus));
+    // }
+
+    // const labelPositions = [];
+    // return width && path ? (
+    return (
+      sortBy(
+        sortBy(
+          acTransitRoutes.features.map(f => {
+            f.scaleKey = f.changes ? f.changes[changeType].trim() : 'other';
+            f.color = colorScale(f.scaleKey);
+            f.order = orderScale(f.scaleKey);
+            // f.path = path(f);
+            // f.center = getCenter(path, f);
+            return f;
+          })
+        , f => -f.route)
+      , f => f.order)
+    );
+      // .map((f, i) => {
+      //   const offsets = offsetGroups.filter(group => group.routes.includes(f.route));
+      //   if (offsets[0]) {
+      //     const offset = offsets[0];
+      //     f.offsetType = offset.name;
+      //     f.offset = {
+      //       x: offset.direction[0] * offset.index,
+      //       y: offset.direction[1] * offset.index,
+      //     };
+      //     offset.index++;
+      //   } else {
+      //     f.offsetType = 'default';
+      //     f.offset = {
+      //       x: 0,
+      //       y: 0,
+      //     };
+      //   }
+
+      //   if (f.geometry) {
+      //     const size = 0.18; // 0.19; //0.2; // 0.25;
+      //     // const size = 0.2;
+      //     const rectHeight = size / 3 * 4;
+      //     const rectWidth = Math.max(rectHeight, rectHeight / 2 * f.route.length);
+      //     const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
+      //     f.start = applyDistortion(projection(flatCoordinates.slice(0, 2)));
+      //     // f.start = fisheye(projection(flatCoordinates.slice(0, 2)));
+      //     // f.start = projection(flatCoordinates.slice(-2));
+      //     f.start[0] += f.offset.x / scale;
+      //     f.start[1] += f.offset.y / scale;
+      //     let position = f.start;
+      //     let usedPositon = labelPositions.find(lp => overlapping(lp, {
+      //       // x1: position[0] - size,
+      //       // y1: position[1],
+      //       // x2: position[0] + size,
+      //       // y2: position[1] + size,
+      //       x1: position[0] - rectWidth / 2,
+      //       y1: position[1],
+      //       x2: position[0] + rectWidth / 2,
+      //       y2: position[1] + rectHeight,
+      //     }));
+
+      //     if (manualOffsets[f.route]) {
+      //       position[0] += manualOffsets[f.route].x;
+      //       position[1] += manualOffsets[f.route].y;
+      //       // usedPositon = false;
+      //     }
+          
+      //     while (usedPositon) {
+      //       flatCoordinates.splice(0, 2);
+      //       let pos = f.start;
+      //       if (flatCoordinates.length >= 2) {
+      //         pos = applyDistortion(projection(flatCoordinates.slice(0, 2)));
+      //         // pos = fisheye(projection(flatCoordinates.slice(0, 2)));
+      //         pos[0] += f.offset.x / scale;
+      //         pos[1] += f.offset.y / scale;
+      //         usedPositon = labelPositions.find(lp => overlapping(lp, {
+      //           // x1: pos[0] - size,
+      //           // y1: pos[1],
+      //           // x2: pos[0] + size,
+      //           // y2: pos[1] + size,
+      //           x1: pos[0] - rectWidth / 2,
+      //           y1: pos[1],
+      //           x2: pos[0] + rectWidth / 2,
+      //           y2: pos[1] + rectHeight,
+      //         }));
+      //       } else {
+      //         console.log(`default: ${f.route}`);
+      //         usedPositon = false;
+      //       }
+      //       position = pos;
+      //       if (manualOffsets[f.route]) {
+      //         position[0] += manualOffsets[f.route].x / scale;
+      //         position[1] += manualOffsets[f.route].y / scale;
+      //         // usedPositon = false;
+      //       }
+      //     }
+
+      //     labelPositions.push({
+      //       // x1: position[0] - size,
+      //       // y1: position[1],
+      //       // x2: position[0] + size,
+      //       // y2: position[1] + size,
+      //       x1: position[0] - rectWidth / 2,
+      //       y1: position[1],
+      //       x2: position[0] + rectWidth / 2,
+      //       y2: position[1] + rectHeight,
+      //     });
+
+      //     f.labelPos = { x: position[0], y: position[1] };
+      //   }
+
+      //   return f;
+      // })
+    // ) : [];
+  }, [changeType, colorScale, orderScale]);
+
+  // const highlightRoute = useMemo(() => (selected ? routes.filter(feature => feature.route === selected) : []), [routes]);
+
+  // console.log(routes);
+  // }, [changeType, width, path, colorScale, orderScale, projection, scale]);
+
 
   // const { projection, path, translate, scale } = useMemo(() => {
   //     const transform = { translate: [0, 0], scale: 1 };
@@ -193,161 +367,184 @@ export default function TransitMap(props) {
   //     return transform;
   // }, [width, height, mapSettings]);
 
-  const { projection, path, translate, scale } = useMemo(() => (
-    width
-      ? scaleProjection(acTransitRoutes, width, height)
-      : { translate: [0, 0], scale: 0 }
-  ), [width, height]);
+  // const { projection, path, translate, scale } = useMemo(() => (
+  //   width
+  //     ? scaleProjection(acTransitRoutes, width, height)
+  //     : { translate: [0, 0], scale: 0 }
+  // ), [width, height]);
 
 
-  const routeBackground = useMemo(() => path ? (
-    <path
-      key='routeBackground'
-      id='routeBackground'
-      d={path(combinedRoutes)}
-      // stroke='#121212'
-      stroke='transparent'
-      // stroke='#333'
-      strokeWidth='1.5'
-      fill='none'
-    />
-  ) : null, [path]);
+  // const routeBackground = useMemo(() => path ? (
+  //   <path
+  //     key='routeBackground'
+  //     id='routeBackground'
+  //     d={path(combinedRoutes)}
+  //     // stroke='#121212'
+  //     stroke='transparent'
+  //     // stroke='#333'
+  //     strokeWidth='1.5'
+  //     fill='none'
+  //   />
+  // ) : null, [path]);
 
-  const routes = useMemo(() => {
-    offsetGroups.forEach(g => {
-      g.index = g.initIndex;
-    });
+  // const routes = useMemo(() => {
+  //   offsetGroups.forEach(g => {
+  //     g.index = g.initIndex;
+  //   });
 
-    if (projection) {
-      ashby.distort.focus(projection(ashby.focus));
-      fruitvale.distort.focus(projection(fruitvale.focus));
-    }
+  //   if (projection) {
+  //     ashby.distort.focus(projection(ashby.focus));
+  //     fruitvale.distort.focus(projection(fruitvale.focus));
+  //   }
 
-    const labelPositions = [];
-    return width && path ? (
-      sortBy(
-        sortBy(
-          acTransitRoutes.features.map(f => {
-            f.scaleKey = f.changes ? f.changes[changeType].trim() : 'other';
-            f.color = colorScale(f.scaleKey);
-            f.order = orderScale(f.scaleKey);
-            f.path = path(f);
-            f.center = getCenter(path, f);
-            return f;
-          })
-        , f => -f.route)
-      , f => f.order)
-      .map((f, i) => {
-        const offsets = offsetGroups.filter(group => group.routes.includes(f.route));
-        if (offsets[0]) {
-          const offset = offsets[0];
-          f.offsetType = offset.name;
-          f.offset = {
-            x: offset.direction[0] * offset.index,
-            y: offset.direction[1] * offset.index,
-          };
-          offset.index++;
-        } else {
-          f.offsetType = 'default';
-          f.offset = {
-            x: 0,
-            y: 0,
-          };
-        }
+  //   const labelPositions = [];
+  //   return width && path ? (
+  //     sortBy(
+  //       sortBy(
+  //         acTransitRoutes.features.map(f => {
+  //           f.scaleKey = f.changes ? f.changes[changeType].trim() : 'other';
+  //           f.color = colorScale(f.scaleKey);
+  //           f.order = orderScale(f.scaleKey);
+  //           f.path = path(f);
+  //           f.center = getCenter(path, f);
+  //           return f;
+  //         })
+  //       , f => -f.route)
+  //     , f => f.order)
+  //     .map((f, i) => {
+  //       const offsets = offsetGroups.filter(group => group.routes.includes(f.route));
+  //       if (offsets[0]) {
+  //         const offset = offsets[0];
+  //         f.offsetType = offset.name;
+  //         f.offset = {
+  //           x: offset.direction[0] * offset.index,
+  //           y: offset.direction[1] * offset.index,
+  //         };
+  //         offset.index++;
+  //       } else {
+  //         f.offsetType = 'default';
+  //         f.offset = {
+  //           x: 0,
+  //           y: 0,
+  //         };
+  //       }
 
-        if (f.geometry) {
-          const size = 0.18; // 0.19; //0.2; // 0.25;
-          // const size = 0.2;
-          const rectHeight = size / 3 * 4;
-          const rectWidth = Math.max(rectHeight, rectHeight / 2 * f.route.length);
-          const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
-          f.start = applyDistortion(projection(flatCoordinates.slice(0, 2)));
-          // f.start = fisheye(projection(flatCoordinates.slice(0, 2)));
-          // f.start = projection(flatCoordinates.slice(-2));
-          f.start[0] += f.offset.x / scale;
-          f.start[1] += f.offset.y / scale;
-          let position = f.start;
-          let usedPositon = labelPositions.find(lp => overlapping(lp, {
-            // x1: position[0] - size,
-            // y1: position[1],
-            // x2: position[0] + size,
-            // y2: position[1] + size,
-            x1: position[0] - rectWidth / 2,
-            y1: position[1],
-            x2: position[0] + rectWidth / 2,
-            y2: position[1] + rectHeight,
-          }));
+  //       if (f.geometry) {
+  //         const size = 0.18; // 0.19; //0.2; // 0.25;
+  //         // const size = 0.2;
+  //         const rectHeight = size / 3 * 4;
+  //         const rectWidth = Math.max(rectHeight, rectHeight / 2 * f.route.length);
+  //         const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
+  //         f.start = applyDistortion(projection(flatCoordinates.slice(0, 2)));
+  //         // f.start = fisheye(projection(flatCoordinates.slice(0, 2)));
+  //         // f.start = projection(flatCoordinates.slice(-2));
+  //         f.start[0] += f.offset.x / scale;
+  //         f.start[1] += f.offset.y / scale;
+  //         let position = f.start;
+  //         let usedPositon = labelPositions.find(lp => overlapping(lp, {
+  //           // x1: position[0] - size,
+  //           // y1: position[1],
+  //           // x2: position[0] + size,
+  //           // y2: position[1] + size,
+  //           x1: position[0] - rectWidth / 2,
+  //           y1: position[1],
+  //           x2: position[0] + rectWidth / 2,
+  //           y2: position[1] + rectHeight,
+  //         }));
 
-          if (manualOffsets[f.route]) {
-            position[0] += manualOffsets[f.route].x;
-            position[1] += manualOffsets[f.route].y;
-            // usedPositon = false;
-          }
+  //         if (manualOffsets[f.route]) {
+  //           position[0] += manualOffsets[f.route].x;
+  //           position[1] += manualOffsets[f.route].y;
+  //           // usedPositon = false;
+  //         }
           
-          while (usedPositon) {
-            flatCoordinates.splice(0, 2);
-            let pos = f.start;
-            if (flatCoordinates.length >= 2) {
-              pos = applyDistortion(projection(flatCoordinates.slice(0, 2)));
-              // pos = fisheye(projection(flatCoordinates.slice(0, 2)));
-              pos[0] += f.offset.x / scale;
-              pos[1] += f.offset.y / scale;
-              usedPositon = labelPositions.find(lp => overlapping(lp, {
-                // x1: pos[0] - size,
-                // y1: pos[1],
-                // x2: pos[0] + size,
-                // y2: pos[1] + size,
-                x1: pos[0] - rectWidth / 2,
-                y1: pos[1],
-                x2: pos[0] + rectWidth / 2,
-                y2: pos[1] + rectHeight,
-              }));
-            } else {
-              console.log(`default: ${f.route}`);
-              usedPositon = false;
-            }
-            position = pos;
-            if (manualOffsets[f.route]) {
-              position[0] += manualOffsets[f.route].x / scale;
-              position[1] += manualOffsets[f.route].y / scale;
-              // usedPositon = false;
-            }
-          }
+  //         while (usedPositon) {
+  //           flatCoordinates.splice(0, 2);
+  //           let pos = f.start;
+  //           if (flatCoordinates.length >= 2) {
+  //             pos = applyDistortion(projection(flatCoordinates.slice(0, 2)));
+  //             // pos = fisheye(projection(flatCoordinates.slice(0, 2)));
+  //             pos[0] += f.offset.x / scale;
+  //             pos[1] += f.offset.y / scale;
+  //             usedPositon = labelPositions.find(lp => overlapping(lp, {
+  //               // x1: pos[0] - size,
+  //               // y1: pos[1],
+  //               // x2: pos[0] + size,
+  //               // y2: pos[1] + size,
+  //               x1: pos[0] - rectWidth / 2,
+  //               y1: pos[1],
+  //               x2: pos[0] + rectWidth / 2,
+  //               y2: pos[1] + rectHeight,
+  //             }));
+  //           } else {
+  //             console.log(`default: ${f.route}`);
+  //             usedPositon = false;
+  //           }
+  //           position = pos;
+  //           if (manualOffsets[f.route]) {
+  //             position[0] += manualOffsets[f.route].x / scale;
+  //             position[1] += manualOffsets[f.route].y / scale;
+  //             // usedPositon = false;
+  //           }
+  //         }
 
-          labelPositions.push({
-            // x1: position[0] - size,
-            // y1: position[1],
-            // x2: position[0] + size,
-            // y2: position[1] + size,
-            x1: position[0] - rectWidth / 2,
-            y1: position[1],
-            x2: position[0] + rectWidth / 2,
-            y2: position[1] + rectHeight,
-          });
+  //         labelPositions.push({
+  //           // x1: position[0] - size,
+  //           // y1: position[1],
+  //           // x2: position[0] + size,
+  //           // y2: position[1] + size,
+  //           x1: position[0] - rectWidth / 2,
+  //           y1: position[1],
+  //           x2: position[0] + rectWidth / 2,
+  //           y2: position[1] + rectHeight,
+  //         });
 
-          f.labelPos = { x: position[0], y: position[1] };
-        }
+  //         f.labelPos = { x: position[0], y: position[1] };
+  //       }
 
-        return f;
-      })
-    ) : [];
-  }, [changeType, width, path, colorScale, orderScale, projection, scale]);
+  //       return f;
+  //     })
+  //   ) : [];
+  // }, [changeType, width, path, colorScale, orderScale, projection, scale]);
+
+  // const updateTooltip = useMemo(() => (
+  //   function(datum) {
+  //     const { route, scaleKey, color, path, order, changes } = datum;
+  //     const status = scaleKey;
+  //     const { area, group, description } = changes;
+  //     setSearchValue(route);
+  //     setTooltipData({
+  //       route,
+  //       color,
+  //       path,
+  //       order,
+  //       area,
+  //       group,
+  //       description,
+  //       status,
+  //     });
+  //   }
+  // ), [setSearchValue]);
 
   const updateTooltip = useMemo(() => (
-    function(datum) {
-      const { route, scaleKey, color, path, order, changes } = datum;
+    function(datum, fromMap = false) {
+      // const { route, scaleKey, color, path, order, changes } = datum;
+      const { route, scaleKey, color, order, changes } = datum;
       const status = scaleKey;
       const { area, group, description } = changes;
-      setSearchValue(route);
+      if (fromMap) {
+        setSearchValue(route);
+      }
       setTooltipData({
         route,
         color,
-        path,
+        // path,
         order,
         area,
         group,
         description,
         status,
+        datum,
       });
     }
   ), [setSearchValue]);
@@ -361,154 +558,323 @@ export default function TransitMap(props) {
     }
   }, [updateTooltip, selected, routes, x, y ]);
 
-  function hoverLine(e) {
-    const { target } = e;
-    const { dataset } = target;
-    const { route } = dataset;
-    const datum = routes.find(r => r.route === route);
-    if (datum) {
-      if (!tooltipData || tooltipData.route !== route) {
-        updateTooltip(datum);
+  // function hoverLine(e) {
+    // const { target } = e;
+    // const { dataset } = target;
+    // const { route } = dataset;
+  // function hoverLine(route) {
+  function hoverLine(target) {
+    // console.log(object);
+    const { object } = target;
+    // let datumToUpdate = false;
+    if (object) {
+      const { route } = object;
+      const datum = routes.filter(r => visibleGroups.includes(r.scaleKey)).find(r => r.route === route);
+      if (datum) {
+        if (!tooltipData || tooltipData.route !== route) {
+          updateTooltip(datum, true);
+          // return true;
+          // datumToUpdate = datum;
+        }
       }
+    } else {
+      if (selected !== '') {
+        setSearchValue('');
+      }
+      if (tooltipData) {
+        setTooltipData(null);  
+      }
+      
+      
+
+      // console.log(target);
+      // setSeelec(null);
     }
+    // return false;
+    // if (datumToUpdate) {
+    //   updateTooltip(datumToUpdate);
+    // } else {
+    //   setTooltipData(null);
+    // }
   }
 
-  const displayRoutes = useMemo(() => (
-    routes.map((r, i) => (
-      <g
-        key={r.route}
-        id={r.route}
-        transform={`translate(${r.offset.x / scale}, ${r.offset.y / scale})`}
-        className={`route ${r.scaleKey}`}
-      >
-        <path
-          data-route={r.route}
-          className='highlight'
-          d={r.path}
-          stroke={r.color}
-          fill='none'
-          strokeWidth={1.5 / scale}
-          strokeOpacity={0.5}
-          pointerEvents='none'
-        />
-      </g>
-    ))
-  ), [routes, scale]);
+  // const displayRoutes = useMemo(() => (
+  //   routes.map((r, i) => (
+  //     <g
+  //       key={r.route}
+  //       id={r.route}
+  //       transform={`translate(${r.offset.x / scale}, ${r.offset.y / scale})`}
+  //       className={`route ${r.scaleKey}`}
+  //     >
+  //       <path
+  //         data-route={r.route}
+  //         className='highlight'
+  //         d={r.path}
+  //         stroke={r.color}
+  //         fill='none'
+  //         strokeWidth={1.5 / scale}
+  //         strokeOpacity={0.5}
+  //         pointerEvents='none'
+  //       />
+  //     </g>
+  //   ))
+  // ), [routes, scale]);
 
-  const displayLabels = useMemo(() => {
-    const fontScale = scaleLinear()
-    .domain([480, 1440])
-    // .domain([480, 960])
-    // .range([6, 18])
-    // .range([7, 12])
-    // .range([7, 14])
-    .range([8, 18])
-    // .range([9, 18])
-    .clamp(true);
-    const font = Math.floor(fontScale(Math.min(width, height))) || 9;
-    const rectHeight = font / 3 * 4;
-    return routes.filter(r => r.labelPos).map((r, i) => {
-      const rectWidth = Math.max(rectHeight, rectHeight / 2 * r.route.length);
-      return (
-        <g
-          pointerEvents='none'
-          className={`${r.scaleKey}`}
-          key={`${r.route}-label`}
-        >
-          <g transform={`translate(${r.labelPos.x}, ${r.labelPos.y})`}>
-            <rect
-              data-route={r.route}
-              className='target'
-              // x={-size / scale}
-              // width={size * 2 / scale}
-              // x={-size * 0.75 / scale}
-              // width={size * 1.5 / scale}
-              x={(-rectWidth / 2) / scale}
-              width={rectWidth / scale}
-              // x={(-size / 2) / scale}
-              // width={size / scale}
-              height={rectHeight / scale}
-              fill='#121212'
-              stroke={r.color}
-              strokeWidth={1 / scale}
-              // fillOpacity={0.75}
-              fillOpacity={0.5}
-              cursor='pointer'
-            />
-            <text
-              fill='white'
-              dy={(font - 0.5) / scale}
-              fontSize={font / scale}
-              textAnchor='middle'
-              pointerEvents='none'
-            >
-              {r.route}
-            </text>
-          </g>
-        </g>
-      )
-    })
-  }, [routes, width, height, scale]);
+  // const displayLabels = useMemo(() => {
+  //   const fontScale = scaleLinear()
+  //   .domain([480, 1440])
+  //   // .domain([480, 960])
+  //   // .range([6, 18])
+  //   // .range([7, 12])
+  //   // .range([7, 14])
+  //   .range([8, 18])
+  //   // .range([9, 18])
+  //   .clamp(true);
+  //   const font = Math.floor(fontScale(Math.min(width, height))) || 9;
+  //   const rectHeight = font / 3 * 4;
+  //   return routes.filter(r => r.labelPos).map((r, i) => {
+  //     const rectWidth = Math.max(rectHeight, rectHeight / 2 * r.route.length);
+  //     return (
+  //       <g
+  //         pointerEvents='none'
+  //         className={`${r.scaleKey}`}
+  //         key={`${r.route}-label`}
+  //       >
+  //         <g transform={`translate(${r.labelPos.x}, ${r.labelPos.y})`}>
+  //           <rect
+  //             data-route={r.route}
+  //             className='target'
+  //             // x={-size / scale}
+  //             // width={size * 2 / scale}
+  //             // x={-size * 0.75 / scale}
+  //             // width={size * 1.5 / scale}
+  //             x={(-rectWidth / 2) / scale}
+  //             width={rectWidth / scale}
+  //             // x={(-size / 2) / scale}
+  //             // width={size / scale}
+  //             height={rectHeight / scale}
+  //             fill='#121212'
+  //             stroke={r.color}
+  //             strokeWidth={1 / scale}
+  //             // fillOpacity={0.75}
+  //             fillOpacity={0.5}
+  //             cursor='pointer'
+  //           />
+  //           <text
+  //             fill='white'
+  //             dy={(font - 0.5) / scale}
+  //             fontSize={font / scale}
+  //             textAnchor='middle'
+  //             pointerEvents='none'
+  //           >
+  //             {r.route}
+  //           </text>
+  //         </g>
+  //       </g>
+  //     )
+  //   })
+  // }, [routes, width, height, scale]);
+  // const groupLayers = useMemo(() => {
+    // const layerMap = mapToNest(group(routes, route => route.scaleKey)).map(group => {      
+  const groupLayers = mapToNest(group(routes, route => route.scaleKey)).map(group => {      
+    const color = hexToRgb(colorScale(group.key));
+    const categoryVisible = visibleGroups.includes(group.key);
+    const opacity = categoryVisible ? 255 : 0;
+    const getLineColor = [...color, opacity];
+    return new GeoJsonLayer({
+      id: `${group.key}-routes`,
+      data: group.values,
+      stroked: true,
+      filled: false,
+      pickable: categoryVisible,
+      lineWidthMinPixels: 1.5,
+      lineWidthMaxPixels: 5,
+      opacity: selected ? 0.001 : 1,
+      getLineWidth: 10,
+      getFillColor: [0, 0, 0, 255],
+      getLineColor,
+      onHover: hoverLine,
+      parameters: {
+        depthTest: false,
+      },
+      updateTriggers: {
+        getLineColor: {visibleGroups},
+      },
+      // transitions: {
+      //   getLineColor: 250,
+      // },
+    });
+  });
+    // console.log(layerMap);
+    // return layerMap;
+    // console.log(Array.from(layerMap));
+
+  // }, [routes]);
+  // console.log(groupLayers);
+  //
+  const layers = [
+    // new GeoJsonLayer({
+    //   id: 'routes',
+    //   data: routes,
+    //   stroked: true,
+    //   filled: false,
+    //   pickable: true,
+    //   lineWidthMinPixels: 1.5,
+    //   lineWidthMaxPixels: 5,
+    //   opacity: selected ? 0.001 : 1,
+    //   getLineWidth: 10,
+    //   getFillColor: [0, 0, 0, 255],
+    //   getLineColor: route => {
+    //     const color = hexToRgb(colorScale(route.scaleKey))
+    //     // const noSelectionOrSelected = !selected || route.route === selected;
+    //     const categoryVisible = visibleGroups.includes(route.scaleKey);
+    //     const opacity = categoryVisible
+    //       // ? noSelectionOrSelected
+    //         ? 255
+    //         // : 10
+    //       : 0;
+    //     return [...color, opacity];
+    //   },
+    //   onHover: hoverLine,
+    //   parameters: {
+    //     depthTest: false,
+    //   },
+    //   updateTriggers: {
+    //     getLineColor: {visibleGroups},
+    //   },
+    //   transitions: {
+    //     getLineColor: 250,
+    //   },
+    // }),
+    ...groupLayers,
+    new GeoJsonLayer({
+      id: 'highlightRouteBackground',
+      data: tooltipData ? [tooltipData.datum] : [], // highlightRoute,
+      stroked: true,
+      filled: false,
+      pickable: false,
+      lineWidthMinPixels: 4,
+      lineWidthMaxPixels: 15,
+      // opacity: selected ? 1 : 0,
+      getLineWidth: 10,
+      getFillColor: [0, 0, 0, 255],
+      getLineColor: [255, 255, 255], // route => hexToRgb(colorScale(route.scaleKey)),
+      // onHover: hoverLine,
+      parameters: {
+        depthTest: false,
+      },
+      // transitions: {
+      //   getLineColor: 250,
+      // },
+    }),
+    new GeoJsonLayer({
+      id: 'highlightRoute',
+      data: tooltipData ? [tooltipData.datum] : [], // highlightRoute,
+      stroked: true,
+      filled: false,
+      pickable: false,
+      lineWidthMinPixels: 2,
+      lineWidthMaxPixels: 10,
+      // opacity: selected ? 1 : 0,
+      getLineWidth: 10,
+      getFillColor: [0, 0, 0, 255],
+      getLineColor: route => hexToRgb(colorScale(route.scaleKey)),
+      // onHover: hoverLine,
+      parameters: {
+        depthTest: false,
+      },
+      // updateTriggers: {
+      //   getLineColor: {visibleGroups},
+      // },
+      // transitions: {
+      //   getLineColor: 250,
+      // },
+    }),
+  ];
+
+  const bounds = geoBounds(acTransitRoutes);
+  const defaultViewState = fitBounds({
+    width: width || 100,
+    height: height || 100,
+    padding: 16,
+    bounds,
+  });
+  defaultViewState.bearing = 0;
+  defaultViewState.pitch = 0;
 
   return (
     <div ref={ref} className="TransitMap">
-      
-      {}
-      <MapInteractionCSS
-        minScale={1}
-        maxScale={10}
-        showControls={true}
-        controlsClass='controls'
-        btnClass='control'
-      >
-      
-    
-      <div ref={mapContainer} className="mapbox" style={{ width, height }} />
-        <svg className={visibleClassString} width={width} height={height}>
-          <rect
-            width={width}
-            height={height}
-            fill='transparent'
-            onClick={() => tooltipData ? setTooltipData(null) : {}}
-            onTouchStart={() => tooltipData ? setTooltipData(null) : {}}
-            onMouseOver={() => tooltipData ? setTooltipData(null) : {}}
-          />
-          <g transform={`translate(${translate}) scale(${scale})`}>
-            <g onMouseMove={hoverLine} onTouchStart={hoverLine}>
-              {routeBackground}
-              <g className='routes'>
-                {displayRoutes}
-              </g>
-              <g className={`labels ${tooltipData ? 'dim' : ''}`}>
-                {displayLabels}
-              </g>
-            </g>
-            {tooltipData ? (
-              <g
-                key={`${tooltipData.route}-highlight`}
-                id={`${tooltipData.route}-highlight`}
-                className='spotlight'
-                pointerEvents='none'
-              >
-                <path
-                  d={tooltipData.path}
-                  stroke='white'
-                  fill='none'
-                  strokeWidth={6 / scale}
-                  strokeOpacity='1'
-                />
-                <path
-                  d={tooltipData.path}
-                  stroke={tooltipData.color}
-                  fill='none'
-                  strokeWidth={3 / scale}
-                  strokeOpacity='1'
-                />
-              </g>
-            ) : null}
-          </g>
-        </svg>
-      </MapInteractionCSS>
+      <DeckGL
+        layers={layers}
+        pickingRadius={5}
+        initialViewState={defaultViewState}
+        controller={true}
+      >    
+        <StaticMap
+          reuseMaps
+          mapStyle='mapbox://styles/jprctr/ckf7hqkbl2caw19nw1abtzh3c'
+          // mapStyle='mapbox://styles/mapbox/dark-v10/'
+          // preventStyleDiffing={true} // idk 
+          mapboxApiAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
+        />
+      </DeckGL>
+      {
+        // <MapInteractionCSS
+        //   minScale={1}
+        //   maxScale={10}
+        //   showControls={true}
+        //   controlsClass='controls'
+        //   btnClass='control'
+        // >
+        // </MapInteractionCSS>
+        // <div ref={mapContainer} className="mapbox" style={{ width, height }} />
+      }
+      {
+        // <svg className={visibleClassString} width={width} height={height}>
+        //   <rect
+        //     width={width}
+        //     height={height}
+        //     fill='transparent'
+        //     onClick={() => tooltipData ? setTooltipData(null) : {}}
+        //     onTouchStart={() => tooltipData ? setTooltipData(null) : {}}
+        //     onMouseOver={() => tooltipData ? setTooltipData(null) : {}}
+        //   />
+        //   <g transform={`translate(${translate}) scale(${scale})`}>
+        //     <g onMouseMove={hoverLine} onTouchStart={hoverLine}>
+        //       {routeBackground}
+        //       <g className='routes'>
+        //         {displayRoutes}
+        //       </g>
+        //       <g className={`labels ${tooltipData ? 'dim' : ''}`}>
+        //         {displayLabels}
+        //       </g>
+        //     </g>
+        //     {tooltipData ? (
+        //       <g
+        //         key={`${tooltipData.route}-highlight`}
+        //         id={`${tooltipData.route}-highlight`}
+        //         className='spotlight'
+        //         pointerEvents='none'
+        //       >
+        //         <path
+        //           d={tooltipData.path}
+        //           stroke='white'
+        //           fill='none'
+        //           strokeWidth={6 / scale}
+        //           strokeOpacity='1'
+        //         />
+        //         <path
+        //           d={tooltipData.path}
+        //           stroke={tooltipData.color}
+        //           fill='none'
+        //           strokeWidth={3 / scale}
+        //           strokeOpacity='1'
+        //         />
+        //       </g>
+        //     ) : null}
+        //   </g>
+        // </svg>
+      }
       <div
         className='tooltip'
         style={{ borderColor: tooltipData ? tooltipData.color : 'white', opacity: tooltipData ? 1 : 0 }}
