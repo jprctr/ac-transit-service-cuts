@@ -597,7 +597,7 @@ export default function TransitMap(props) {
         group,
         description,
         status,
-        datum,
+        datum: datum.geometry ? datum : null,
       });
     }
   ), [setSearchValue]);
@@ -821,7 +821,7 @@ export default function TransitMap(props) {
     
     new GeoJsonLayer({
       id: 'highlightRouteBackground',
-      data: tooltipData ? [tooltipData.datum] : [], // highlightRoute,
+      data: tooltipData && tooltipData.datum ? [tooltipData.datum] : [], // highlightRoute,
       stroked: true,
       filled: false,
       pickable: false,
@@ -841,7 +841,7 @@ export default function TransitMap(props) {
     }),
     new GeoJsonLayer({
       id: 'highlightRoute',
-      data: tooltipData ? [tooltipData.datum] : [], // highlightRoute,
+      data: tooltipData && tooltipData.datum ? [tooltipData.datum] : [], // highlightRoute,
       stroked: true,
       filled: false,
       pickable: false,
