@@ -6,12 +6,50 @@
 
 /**/
 
-.TransitMap .controls {
+.TransitMap .navigationControl {
+  position: absolute;
+  /*rig*/
+  /*display: flex;*/
+  /*position: relative;*/
+  /*width: 1.5em;*/
+  /*width: 29px;*/
+  width: 1.5em;
+  top: 1.25em;
+  right: calc(1em + 2px);  
+  /*z-index: 1000;*/
+  /*pointer-events: auto;*/
+  /*border: 1px solid red;*/
+  cursor: move;
+}
+
+.TransitMap .navigationControl .mapboxgl-ctrl.mapboxgl-ctrl-group {
+  border-radius: 0;
+  box-shadow: none;
+  /*background: #222222;*/
+  background: transparent;
+}
+
+.TransitMap .navigationControl .mapboxgl-ctrl.mapboxgl-ctrl-group button {
+  filter: invert(1); /*!!!!*/
+  /**/
+  background: #dddddd;
+  border: 1px solid #a2a2a2;
+  
+  margin-bottom: 0.5em;
+  font-size: 1em;
+  line-height: 1em;
+  width: 1.5em;
+  height: 1.5em;
+  /*box-sizing: content-box;*/
+}
+
+/**/
+
+/*.TransitMap .controls {
   position: absolute;
   display: flex;
   flex-direction: column;
   top: 1.25em;
-  /*right: 1em;*/
   right: calc(1em + 2px);
 }
 
@@ -39,7 +77,7 @@
   text-align: center;
   border: 1px solid #5D5D5D;
   width: 100%;
-}
+}*/
 
 /**/
 

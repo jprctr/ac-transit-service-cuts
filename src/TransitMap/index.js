@@ -5,16 +5,17 @@ import { feature } from 'topojson';
 import sortBy from 'lodash.sortby';
 import { group } from 'd3-array';
 import { scaleLinear } from 'd3-scale';
-import { geoPath, geoMercator, geoBounds } from 'd3-geo';
+import { geoPath, geoMercator, geoBounds, geoCentroid } from 'd3-geo';
 import { radial } from 'd3-fisheye';
 import useDimensions from 'react-use-dimensions';
 // import { MapInteractionCSS } from 'react-map-interaction';
 // import mapboxgl from 'mapbox-gl';
 import bbox from '@turf/bbox';
-import { StaticMap } from 'react-map-gl';
+import { StaticMap, NavigationControl, _MapContext as MapContext, } from 'react-map-gl';
 import { fitBounds } from 'viewport-mercator-project';
 import DeckGL from '@deck.gl/react';
-import { GeoJsonLayer } from '@deck.gl/layers';
+import { GeoJsonLayer, TextLayer } from '@deck.gl/layers';
+// import {DataFilterExtension} from '@deck.gl/extensions';
 
 import './styles.css';
 
@@ -29,6 +30,8 @@ import serviceChangeData from './ac-transit-service-cuts.json';
 console.log(process.env.REACT_APP_MAPBOX_TOKEN);
 // let maap;
 // mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN;
+
+// const dataFilter = new DataFilterExtension({ filterSize: 1 });
 
 const ashby = {
   focus: [-122.269361, 37.854422],
@@ -178,6 +181,7 @@ export default function TransitMap(props) {
   const { changeType, selected, visibleGroups, colorScale, orderScale, setSearchValue } = props;
   // const [mapSettings, setMapSettigns] = useState();
   // const [routes, setRoutes] = useState();
+  const [viewport, setViewport] = useState();
   const [tooltipData, setTooltipData] = useState();
   const [ref, { x, y, width, height }] = useDimensions();
   // const mapContainer = useRef();
@@ -341,6 +345,10 @@ export default function TransitMap(props) {
       // })
     // ) : [];
   }, [changeType, colorScale, orderScale]);
+
+  const displayRoutes = useMemo(() => (
+    routes.filter(route => visibleGroups.includes(route.scaleKey))
+  ), [routes, visibleGroups]);
 
   // const highlightRoute = useMemo(() => (selected ? routes.filter(feature => feature.route === selected) : []), [routes]);
 
@@ -675,78 +683,97 @@ export default function TransitMap(props) {
   //   })
   // }, [routes, width, height, scale]);
   // const groupLayers = useMemo(() => {
-    // const layerMap = mapToNest(group(routes, route => route.scaleKey)).map(group => {      
-  const groupLayers = mapToNest(group(routes, route => route.scaleKey)).map(group => {      
-    const color = hexToRgb(colorScale(group.key));
-    const categoryVisible = visibleGroups.includes(group.key);
-    const opacity = categoryVisible ? 255 : 0;
-    const getLineColor = [...color, opacity];
-    return new GeoJsonLayer({
-      id: `${group.key}-routes`,
-      data: group.values,
-      stroked: true,
-      filled: false,
-      pickable: categoryVisible,
-      lineWidthMinPixels: 1.5,
-      lineWidthMaxPixels: 5,
-      opacity: selected ? 0.001 : 1,
-      getLineWidth: 10,
-      getFillColor: [0, 0, 0, 255],
-      getLineColor,
-      onHover: hoverLine,
-      parameters: {
-        depthTest: false,
-      },
-      updateTriggers: {
-        getLineColor: {visibleGroups},
-      },
-      // transitions: {
-      //   getLineColor: 250,
-      // },
-    });
-  });
+    // const layerMap = mapToNest(group(routes, route => route.scaleKey)).map(group => {   
+
+  // const groupLayers = mapToNest(group(routes, route => route.scaleKey)).map(group => {      
+  //   const color = hexToRgb(colorScale(group.key));
+  //   const categoryVisible = visibleGroups.includes(group.key);
+  //   const opacity = categoryVisible ? 255 : 0;
+  //   const getLineColor = [...color, opacity];
+  //   return new GeoJsonLayer({
+  //     id: `${group.key}-routes`,
+  //     data: group.values,
+  //     stroked: true,
+  //     filled: false,
+  //     pickable: categoryVisible,
+  //     lineWidthMinPixels: 1.5,
+  //     lineWidthMaxPixels: 5,
+  //     opacity: selected ? 0.001 : 1,
+  //     getLineWidth: 10,
+  //     getFillColor: [0, 0, 0, 255],
+  //     getLineColor,
+  //     onHover: hoverLine,
+  //     parameters: {
+  //       depthTest: false,
+  //     },
+  //     updateTriggers: {
+  //       getLineColor: {visibleGroups},
+  //     },
+  //     // transitions: {
+  //     //   getLineColor: 250,
+  //     // },
+  //   });
+  // });
+
     // console.log(layerMap);
     // return layerMap;
     // console.log(Array.from(layerMap));
 
   // }, [routes]);
   // console.log(groupLayers);
+  // const highlight
   //
+
   const layers = [
-    // new GeoJsonLayer({
-    //   id: 'routes',
-    //   data: routes,
-    //   stroked: true,
-    //   filled: false,
-    //   pickable: true,
-    //   lineWidthMinPixels: 1.5,
-    //   lineWidthMaxPixels: 5,
-    //   opacity: selected ? 0.001 : 1,
-    //   getLineWidth: 10,
-    //   getFillColor: [0, 0, 0, 255],
-    //   getLineColor: route => {
-    //     const color = hexToRgb(colorScale(route.scaleKey))
-    //     // const noSelectionOrSelected = !selected || route.route === selected;
-    //     const categoryVisible = visibleGroups.includes(route.scaleKey);
-    //     const opacity = categoryVisible
-    //       // ? noSelectionOrSelected
-    //         ? 255
-    //         // : 10
-    //       : 0;
-    //     return [...color, opacity];
-    //   },
-    //   onHover: hoverLine,
-    //   parameters: {
-    //     depthTest: false,
-    //   },
-    //   updateTriggers: {
-    //     getLineColor: {visibleGroups},
-    //   },
-    //   transitions: {
-    //     getLineColor: 250,
-    //   },
-    // }),
-    ...groupLayers,
+    new GeoJsonLayer({
+      id: 'routes',
+      // data: routes,
+      data: displayRoutes,
+      // data: routes.filter()
+      stroked: true,
+      filled: false,
+      pickable: true,
+      lineWidthMinPixels: 1.5,
+      lineWidthMaxPixels: 5,
+      opacity: selected ? 0.001 : 1,
+      getLineWidth: 10,
+      getFillColor: [0, 0, 0],
+      // getLineColor: route => hexToRgb(colorScale(route.scaleKey)),
+      getLineColor: route => {
+        const color = hexToRgb(colorScale(route.scaleKey))
+        return color;
+        // const noSelectionOrSelected = !selected || route.route === selected;
+        // const categoryVisible = visibleGroups.includes(route.scaleKey);
+        // const opacity = categoryVisible
+        //   // ? noSelectionOrSelected
+        //     ? 255
+        //     // : 10
+        //   : 0;
+        // const opacity = selected === '' ? 255 : 10;
+        // // const opacity = 1;
+        // return [...color, opacity];
+      },
+      onHover: hoverLine,
+      parameters: {
+        depthTest: false,
+      },
+      // updateTriggers: {
+      //   getLineColor: {selected},
+      // //   getFilterValue: {visibleGroups},
+      // },
+      // transitions: {
+      //   getLineColor: 250,
+      // },
+      // filterSize: [0, 2],
+      // getFilterValue: route => {
+      //   // console.log(route.scaleKey);
+      //   // console.log(visibleGroups);
+      //   return visibleGroups.includes(route.scaleKey) ? -1 : 1;
+      // },
+      // extensions: [dataFilter],
+    }),
+    // ...groupLayers,
+    
     new GeoJsonLayer({
       id: 'highlightRouteBackground',
       data: tooltipData ? [tooltipData.datum] : [], // highlightRoute,
@@ -774,7 +801,7 @@ export default function TransitMap(props) {
       filled: false,
       pickable: false,
       lineWidthMinPixels: 2,
-      lineWidthMaxPixels: 10,
+      lineWidthMaxPixels: 12,
       // opacity: selected ? 1 : 0,
       getLineWidth: 10,
       getFillColor: [0, 0, 0, 255],
@@ -790,6 +817,26 @@ export default function TransitMap(props) {
       //   getLineColor: 250,
       // },
     }),
+    // new TextLayer({
+    //   id: 'route-labels',
+    //   data: displayRoutes,
+    //   pickable: true,
+    //   onHover: hoverLine,
+    //   getText: route => route.route,
+    //   getPosition: route => geoCentroid(route),
+    //   // getPosition: route => route.geometry.coordinates,
+    //   // getColor: d => DEFAULT_COLOR,
+    //   // getColor: route => hexToRgb(colorScale(route.scaleKey)),
+    //   // getColor: route => !selected || route.route === selected ? [255, 255, 255] : [255, 255, 255, 10],
+    //   opacity: selected ? 0.001 : 1,
+    //   getColor: [255, 255, 255],
+    //   getSize: 16,
+    //   sizeScale: 1,
+    //   // updateTriggers: {
+    //   //   getColor: {selected},
+    //   // },
+    //   // sizeScale: fontSize / 20
+    // }),
   ];
 
   const bounds = geoBounds(acTransitRoutes);
@@ -802,6 +849,8 @@ export default function TransitMap(props) {
   defaultViewState.bearing = 0;
   defaultViewState.pitch = 0;
 
+  // console.log('render');s
+
   return (
     <div ref={ref} className="TransitMap">
       <DeckGL
@@ -809,15 +858,20 @@ export default function TransitMap(props) {
         pickingRadius={5}
         initialViewState={defaultViewState}
         controller={true}
+        getCursor={() => tooltipData ? 'pointer' : 'grab'}
+        ContextProvider={MapContext.Provider}
       >    
         <StaticMap
-          reuseMaps
-          mapStyle='mapbox://styles/jprctr/ckf7hqkbl2caw19nw1abtzh3c'
-          // mapStyle='mapbox://styles/mapbox/dark-v10/'
-          // preventStyleDiffing={true} // idk 
+          mapStyle="mapbox://styles/jprctr/ckf7hqkbl2caw19nw1abtzh3c"
           mapboxApiAccessToken={process.env.REACT_APP_MAPBOX_TOKEN}
+          preventStyleDiffing={true}
+          reuseMaps
         />
+        <div className="navigationControl">
+          <NavigationControl showCompass={false} />
+        </div>
       </DeckGL>
+
       {
         // <MapInteractionCSS
         //   minScale={1}
