@@ -17,6 +17,10 @@ export const rename = {
   '1': 'BRT/1',
 };
 
+const manualLabelPlacement = {
+  'BSD': [-122.271168, 37.804324],
+};
+
 const serviceChanges = serviceChangeData.map(change => {
   change.line = rename[change.line] || change.line;
   change['change-15'] = change['change-15'].trim() === '' ? 'no change' : change['change-15'];
@@ -96,7 +100,7 @@ export default function TransitMap(props) {
   }, [width, height]);
 
   const routes = useMemo(() => {
-    const size = 0.0075; // 0.0072; // min: 0.005;
+    const size = 0.007;//2; //0.0075; // 0.0072; // min: 0.005;
     const rectHeight = size / 3 * 4;
     const labelPositions = [];
 
@@ -115,7 +119,7 @@ export default function TransitMap(props) {
         if (f.geometry) {
           const rectWidth = Math.max(rectHeight, rectHeight / 2 * f.route.length);
           const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
-          f.start = flatCoordinates.slice(0, 2);
+          f.start = manualLabelPlacement[f.route] ? manualLabelPlacement[f.route] : flatCoordinates.slice(0, 2);
           let position = f.start;
           let usedPositon = labelPositions.find(lp => overlapping(lp, getRectDimensions(position, rectWidth, rectHeight)));
 
