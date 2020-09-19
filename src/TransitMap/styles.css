@@ -15,7 +15,10 @@
   /*width: 29px;*/
   width: 1.5em;
   top: 1.25em;
-  right: calc(1em + 2px);  
+  bottom: 0;
+  right: calc(1em + 2px);
+  /*background: #cde;*/
+  height: 4em;
   /*z-index: 1000;*/
   /*pointer-events: auto;*/
   /*border: 1px solid red;*/
