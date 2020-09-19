@@ -11,7 +11,6 @@ import { GeoJsonLayer, TextLayer } from '@deck.gl/layers';
 import './styles.css';
 
 import Winter19Routeshape from './Winter19Routeshape.geo.json';
-// import RouteBackground from './RouteBackground.json';
 import serviceChangeData from './ac-transit-service-cuts.json';
 
 console.log(process.env.REACT_APP_MAPBOX_TOKEN);
@@ -94,47 +93,47 @@ export default function TransitMap(props) {
         , f => -f.route)
       , f => f.order)
       .map(f => {
-          if (f.geometry) {
-            const rectWidth = Math.max(rectHeight, rectHeight / 2 * f.route.length);
-            const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
+        if (f.geometry) {
+          const rectWidth = Math.max(rectHeight, rectHeight / 2 * f.route.length);
+          const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
 
-            f.start = flatCoordinates.slice(0, 2);
-            let position = f.start;
-            let usedPositon = labelPositions.find(lp => overlapping(lp, {
-              x1: position[0] - rectWidth / 2,
-              y1: position[1],
-              x2: position[0] + rectWidth / 2,
-              y2: position[1] + rectHeight,
-            }));
+          f.start = flatCoordinates.slice(0, 2);
+          let position = f.start;
+          let usedPositon = labelPositions.find(lp => overlapping(lp, {
+            x1: position[0] - rectWidth / 2,
+            y1: position[1],
+            x2: position[0] + rectWidth / 2,
+            y2: position[1] + rectHeight,
+          }));
 
-            while (usedPositon) {
-              flatCoordinates.splice(0, 2);
-              let pos = f.start;
-              if (flatCoordinates.length >= 2) {
-                pos = flatCoordinates.slice(0, 2);
-                usedPositon = labelPositions.find(lp => overlapping(lp, {
-                  x1: pos[0] - rectWidth / 2,
-                  y1: pos[1],
-                  x2: pos[0] + rectWidth / 2,
-                  y2: pos[1] + rectHeight,
-                }));
-              } else {
-                console.log(`default: ${f.route}`);
-                usedPositon = false;
-              }
-              position = pos;
+          while (usedPositon) {
+            flatCoordinates.splice(0, 2);
+            let pos = f.start;
+            if (flatCoordinates.length >= 2) {
+              pos = flatCoordinates.slice(0, 2);
+              usedPositon = labelPositions.find(lp => overlapping(lp, {
+                x1: pos[0] - rectWidth / 2,
+                y1: pos[1],
+                x2: pos[0] + rectWidth / 2,
+                y2: pos[1] + rectHeight,
+              }));
+            } else {
+              console.log(`default: ${f.route}`);
+              usedPositon = false;
             }
-
-            labelPositions.push({
-              x1: position[0] - rectWidth / 2,
-              y1: position[1],
-              x2: position[0] + rectWidth / 2,
-              y2: position[1] + rectHeight,
-            });
-
-            f.labelPos = position;
+            position = pos;
           }
-          return f;
+
+          labelPositions.push({
+            x1: position[0] - rectWidth / 2,
+            y1: position[1],
+            x2: position[0] + rectWidth / 2,
+            y2: position[1] + rectHeight,
+          });
+
+          f.labelPos = position;
+        }
+        return f;
       })
     );
   }, [changeType, colorScale, orderScale]);
