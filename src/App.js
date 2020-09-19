@@ -55,6 +55,7 @@ function App() {
 
   function clearSelected() {
     setValue('');
+    setSearchValue('');
     setSuggestions(getSuggestions('', visibleGroups));
   }
 
