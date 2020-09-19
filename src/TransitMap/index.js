@@ -234,7 +234,7 @@ export default function TransitMap(props) {
     //   fruitvale.distort.focus(projection(fruitvale.focus));
     // }
     // const size = 0.18;
-    const size = 0.0072; // min: 0.005;
+    const size = 0.0075; // 0.0072; // min: 0.005;
     const rectHeight = size / 3 * 4;
     const labelPositions = [];
     // return width && path ? (
@@ -247,53 +247,98 @@ export default function TransitMap(props) {
             f.order = orderScale(f.scaleKey);
             // f.path = path(f);
             // f.center = getCenter(path, f);
-            if (f.geometry) {
-              // f.bounds = geoBounds(f);
-              const rectWidth = Math.max(rectHeight, rectHeight / 2 * f.route.length);
-              const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
-              //
-              f.start = flatCoordinates.slice(0, 2);
-              let position = f.start;
-              let usedPositon = labelPositions.find(lp => overlapping(lp, {
-                x1: position[0] - rectWidth / 2,
-                y1: position[1],
-                x2: position[0] + rectWidth / 2,
-                y2: position[1] + rectHeight,
-              }));
+            // if (f.geometry) {
+            //   // f.bounds = geoBounds(f);
+            //   const rectWidth = Math.max(rectHeight, rectHeight / 2 * f.route.length);
+            //   const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
+            //   //
+            //   f.start = flatCoordinates.slice(0, 2);
+            //   let position = f.start;
+            //   let usedPositon = labelPositions.find(lp => overlapping(lp, {
+            //     x1: position[0] - rectWidth / 2,
+            //     y1: position[1],
+            //     x2: position[0] + rectWidth / 2,
+            //     y2: position[1] + rectHeight,
+            //   }));
 
-              while (usedPositon) {
-                flatCoordinates.splice(0, 2);
-                let pos = f.start;
-                if (flatCoordinates.length >= 2) {
-                  pos = flatCoordinates.slice(0, 2);
-                  usedPositon = labelPositions.find(lp => overlapping(lp, {
-                    x1: pos[0] - rectWidth / 2,
-                    y1: pos[1],
-                    x2: pos[0] + rectWidth / 2,
-                    y2: pos[1] + rectHeight,
-                  }));
-                } else {
-                  console.log(`default: ${f.route}`);
-                  usedPositon = false;
-                }
-                position = pos;
-              }
+            //   while (usedPositon) {
+            //     flatCoordinates.splice(0, 2);
+            //     let pos = f.start;
+            //     if (flatCoordinates.length >= 2) {
+            //       pos = flatCoordinates.slice(0, 2);
+            //       usedPositon = labelPositions.find(lp => overlapping(lp, {
+            //         x1: pos[0] - rectWidth / 2,
+            //         y1: pos[1],
+            //         x2: pos[0] + rectWidth / 2,
+            //         y2: pos[1] + rectHeight,
+            //       }));
+            //     } else {
+            //       console.log(`default: ${f.route}`);
+            //       usedPositon = false;
+            //     }
+            //     position = pos;
+            //   }
 
-              labelPositions.push({
-                x1: position[0] - rectWidth / 2,
-                y1: position[1],
-                x2: position[0] + rectWidth / 2,
-                y2: position[1] + rectHeight,
-              });
+            //   labelPositions.push({
+            //     x1: position[0] - rectWidth / 2,
+            //     y1: position[1],
+            //     x2: position[0] + rectWidth / 2,
+            //     y2: position[1] + rectHeight,
+            //   });
 
-              f.labelPos = position; // { x: position[0], y: position[1] };
-              //
-            }
+            //   f.labelPos = position; // { x: position[0], y: position[1] };
+            //   //
+            // }
 
             return f;
           })
         , f => -f.route)
       , f => f.order)
+      .map(f => {
+          if (f.geometry) {
+            // f.bounds = geoBounds(f);
+            const rectWidth = Math.max(rectHeight, rectHeight / 2 * f.route.length);
+            const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
+            //
+            f.start = flatCoordinates.slice(0, 2);
+            let position = f.start;
+            let usedPositon = labelPositions.find(lp => overlapping(lp, {
+              x1: position[0] - rectWidth / 2,
+              y1: position[1],
+              x2: position[0] + rectWidth / 2,
+              y2: position[1] + rectHeight,
+            }));
+
+            while (usedPositon) {
+              flatCoordinates.splice(0, 2);
+              let pos = f.start;
+              if (flatCoordinates.length >= 2) {
+                pos = flatCoordinates.slice(0, 2);
+                usedPositon = labelPositions.find(lp => overlapping(lp, {
+                  x1: pos[0] - rectWidth / 2,
+                  y1: pos[1],
+                  x2: pos[0] + rectWidth / 2,
+                  y2: pos[1] + rectHeight,
+                }));
+              } else {
+                console.log(`default: ${f.route}`);
+                usedPositon = false;
+              }
+              position = pos;
+            }
+
+            labelPositions.push({
+              x1: position[0] - rectWidth / 2,
+              y1: position[1],
+              x2: position[0] + rectWidth / 2,
+              y2: position[1] + rectHeight,
+            });
+
+            f.labelPos = position; // { x: position[0], y: position[1] };
+            //
+          }
+          return f;
+      })
     );
       // .map((f, i) => {
       //   const offsets = offsetGroups.filter(group => group.routes.includes(f.route));
@@ -760,6 +805,32 @@ export default function TransitMap(props) {
   //   });
   // });
 
+  const textLayers = mapToNest(group(displayRoutes, route => route.scaleKey)).map(group => {      
+    return new TextLayer({
+      id: `${group.key}-route-labels`,
+      data: group.values,
+      pickable: true,
+      onHover: hoverLine,
+      getText: route => route.route,
+      getPosition: route => route.labelPos,
+      // opacity: selected ? 0.001 : 1,
+      opacity: selected ? 0.01 : 1,
+      getColor: [0, 0, 0],
+      backgroundColor: hexToRgb(colorScale(group.key)),
+      sizeMinPixels: 0,
+      sizeMaxPixels: 24,
+      fontFamily: 'Fira Sans, sans-serif',
+      fontWeight: 500,
+      sizeUnits: 'meters',
+      sizeScale: 32,
+      // sizeScale: 24,
+      // lineHeight: 0,
+      // fontSettings: {
+      //   sdf: true,
+      // }
+    });
+  });
+
     // console.log(layerMap);
     // return layerMap;
     // console.log(Array.from(layerMap));
@@ -862,33 +933,39 @@ export default function TransitMap(props) {
       //   getLineColor: 250,
       // },
     }),
-    new TextLayer({
-      id: 'route-labels',
-      data: displayRoutes,
-      pickable: true,
-      onHover: hoverLine,
-      getText: route => route.route,
-      // getPosition: route => geoCentroid(route),
-      getPosition: route => route.labelPos,
-      // getPosition: route => route.geometry.coordinates,
-      // getColor: d => DEFAULT_COLOR,
-      // getColor: route => hexToRgb(colorScale(route.scaleKey)),
-      // getColor: route => !selected || route.route === selected ? [255, 255, 255] : [255, 255, 255, 10],
-      opacity: selected ? 0.001 : 1,
-      getColor: [255, 255, 255],
-      // backgroundColor: [18, 18, 18],
-      // backgroundColor: [255, 255, 255],
-      // backgroundColor: route => hexToRgb(colorScale(route.scaleKey)),
-      // opacity: 0.5,
-      // getSize: 16,
-      sizeMinPixels: 0,
-      sizeMaxPixels: 16,
-      // sizeScale: 1,
-      // updateTriggers: {
-      //   getColor: {selected},
-      // },
-      // sizeScale: fontSize / 20
-    }),
+    ...textLayers,
+    // new TextLayer({
+    //   id: 'route-labels',
+    //   data: displayRoutes,
+    //   pickable: true,
+    //   onHover: hoverLine,
+    //   getText: route => route.route,
+    //   // getPosition: route => geoCentroid(route),
+    //   getPosition: route => route.labelPos,
+    //   // getPosition: route => route.geometry.coordinates,
+    //   // getColor: d => DEFAULT_COLOR,
+    //   // getColor: route => hexToRgb(colorScale(route.scaleKey)),
+    //   // getColor: route => !selected || route.route === selected ? [255, 255, 255] : [255, 255, 255, 10],
+    //   opacity: selected ? 0.001 : 1,
+    //   // getColor: route => hexToRgb(colorScale(route.scaleKey)),
+    //   getColor: [255, 255, 255],
+    //   // backgroundColor: [18, 18, 18],
+    //   // backgroundColor: [255, 255, 255],
+    //   // backgroundColor: route => hexToRgb(colorScale(route.scaleKey)),
+    //   // opacity: 0.5,
+    //   // getSize: 16,
+    //   sizeMinPixels: 0,
+    //   sizeMaxPixels: 24,
+    //   fontFamily: 'Fira Sans, sans-serif',
+    //   // font-family: 'Fira Sans', sans-serif;
+    //   // getSize: () => 160,
+    //   sizeUnits: 'meters',
+    //   sizeScale: 38,
+    //   // updateTriggers: {
+    //   //   getColor: {selected},
+    //   // },
+    //   // sizeScale: fontSize / 20
+    // }),
   ];
 
   const bounds = geoBounds(acTransitRoutes);
@@ -907,7 +984,7 @@ export default function TransitMap(props) {
     <div ref={ref} className="TransitMap">
       <DeckGL
         layers={layers}
-        pickingRadius={5}
+        pickingRadius={8}
         initialViewState={defaultViewState}
         controller={true}
         getCursor={() => tooltipData ? 'pointer' : 'grab'}
@@ -1023,7 +1100,12 @@ export default function TransitMap(props) {
         <div
           className='close'
           style={{ borderColor: tooltipData ? tooltipData.color : 'white' }}
-          onClick={() => setTooltipData(null)}
+          onClick={() => {
+            if (selected !== '') {
+              setSearchValue('');
+            }
+            setTooltipData(null);
+          }}
         >
           <div>x</div>
         </div>
