@@ -82,8 +82,6 @@ function App() {
     );
   };
 
-  // const visibleClassString = visibleGroups.join(' ');
-
   return (
     <div ref={ref} className="App">
       <div className='panel'>
@@ -140,7 +138,6 @@ function App() {
       <TransitMap
         changeType={changeType}
         selected={value}
-        // visibleClassString={visibleClassString}
         visibleGroups={visibleGroups}
         colorScale={colorScale}
         orderScale={orderScale}
