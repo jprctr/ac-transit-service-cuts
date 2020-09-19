@@ -42,6 +42,7 @@ acTransitRoutes.features = acTransitRoutes.features.map(f => {
   return f;
 })
 .filter(f => f.changes); // hiding no info routes for now
+const routeGeoBounds = geoBounds(acTransitRoutes);
 acTransitRoutes.features = acTransitRoutes.features.concat(noRouteFeatures);
 
 console.warn(`no information for: ${unused.join(', ')}`);
@@ -61,7 +62,6 @@ function mapToNest(map) {
   return Array.from(map, ([key, values]) => ({key, values}));
 }
 
-
 function hexToRgb(hex) {
   var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result ? [
@@ -75,6 +75,18 @@ export default function TransitMap(props) {
   const { changeType, selected, visibleGroups, colorScale, orderScale, setSearchValue } = props;
   const [tooltipData, setTooltipData] = useState();
   const [ref, { x, y, width, height }] = useDimensions();
+
+  const defaultViewState = useMemo(() => {
+    const viewState = fitBounds({
+      bounds: routeGeoBounds,
+      width: width || 100,
+      height: height || 100,
+      padding: 16,
+    });
+    viewState.bearing = 0;
+    viewState.pitch = 0;
+    return viewState;
+  }, [width, height]);
 
   const routes = useMemo(() => {
     const size = 0.0075; // 0.0072; // min: 0.005;
@@ -142,6 +154,10 @@ export default function TransitMap(props) {
     routes.filter(route => visibleGroups.includes(route.scaleKey) && route.geometry)
   ), [routes, visibleGroups]);
 
+  const routesByGroup = useMemo(() => (
+    mapToNest(group(displayRoutes, route => route.scaleKey))
+  ), [displayRoutes]);
+
   const updateTooltip = useMemo(() => (
     function(datum, fromMap = false) {
       const { route, scaleKey, color, order, changes } = datum;
@@ -196,7 +212,7 @@ export default function TransitMap(props) {
     }
   }
 
-  const textLayers = mapToNest(group(displayRoutes, route => route.scaleKey)).map(group => {      
+  const textLayers = routesByGroup.map(group => {      
     return new TextLayer({
       id: `${group.key}-route-labels`,
       data: group.values,
@@ -216,6 +232,39 @@ export default function TransitMap(props) {
     });
   });
 
+  const highlightLayers = tooltipData && tooltipData.datum ? [
+    new GeoJsonLayer({
+      id: 'highlightRouteBackground',
+      data: [tooltipData.datum],
+      stroked: true,
+      filled: false,
+      pickable: false,
+      lineWidthMinPixels: 4,
+      lineWidthMaxPixels: 15,
+      getLineWidth: 10,
+      getFillColor: [0, 0, 0, 255],
+      getLineColor: [255, 255, 255],
+      parameters: {
+        depthTest: false,
+      },
+    }),
+    new GeoJsonLayer({
+      id: 'highlightRoute',
+      data: [tooltipData.datum],
+      stroked: true,
+      filled: false,
+      pickable: false,
+      lineWidthMinPixels: 2,
+      lineWidthMaxPixels: 12,
+      getLineWidth: 10,
+      getFillColor: [0, 0, 0, 255],
+      getLineColor: route => hexToRgb(colorScale(route.scaleKey)),
+      parameters: {
+        depthTest: false,
+      },
+    }),
+  ] : [];
+
   const layers = [
     new GeoJsonLayer({
       id: 'routes',
@@ -234,48 +283,9 @@ export default function TransitMap(props) {
         depthTest: false,
       },
     }),
-    new GeoJsonLayer({
-      id: 'highlightRouteBackground',
-      data: tooltipData && tooltipData.datum ? [tooltipData.datum] : [], // highlightRoute,
-      stroked: true,
-      filled: false,
-      pickable: false,
-      lineWidthMinPixels: 4,
-      lineWidthMaxPixels: 15,
-      getLineWidth: 10,
-      getFillColor: [0, 0, 0, 255],
-      getLineColor: [255, 255, 255],
-      parameters: {
-        depthTest: false,
-      },
-    }),
-    new GeoJsonLayer({
-      id: 'highlightRoute',
-      data: tooltipData && tooltipData.datum ? [tooltipData.datum] : [], // highlightRoute,
-      stroked: true,
-      filled: false,
-      pickable: false,
-      lineWidthMinPixels: 2,
-      lineWidthMaxPixels: 12,
-      getLineWidth: 10,
-      getFillColor: [0, 0, 0, 255],
-      getLineColor: route => hexToRgb(colorScale(route.scaleKey)),
-      parameters: {
-        depthTest: false,
-      },
-    }),
     ...textLayers,
+    ...highlightLayers,
   ];
-
-  const bounds = geoBounds(acTransitRoutes);
-  const defaultViewState = fitBounds({
-    width: width || 100,
-    height: height || 100,
-    padding: 16,
-    bounds,
-  });
-  defaultViewState.bearing = 0;
-  defaultViewState.pitch = 0;
 
   return (
     <div ref={ref} className="TransitMap">
