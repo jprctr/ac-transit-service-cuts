@@ -204,6 +204,26 @@ export default function TransitMap(props) {
 
   const textLayers = routesByGroup.map(group => {      
     return new TextLayer({
+      id: `${group.key}-route-labels-background`,
+      data: group.values,
+      pickable: false,
+      getText: route => route.route,
+      getPosition: route => route.labelPos,
+      opacity: selected ? 0.025 : 1,
+      getColor: [0, 0, 0],
+      backgroundColor: hexToRgb(colorScale(group.key)),
+      sizeMinPixels: 0,
+      sizeMaxPixels: 28, //30,
+      fontFamily: 'Fira Sans, sans-serif',
+      fontWeight: 500,
+      sizeUnits: 'meters',
+      sizeScale: 36,
+      parameters: {
+        depthTest: false,
+      },
+    });
+  }).concat(routesByGroup.map(group => {      
+    return new TextLayer({
       id: `${group.key}-route-labels`,
       data: group.values,
       pickable: true,
@@ -211,8 +231,8 @@ export default function TransitMap(props) {
       getText: route => route.route,
       getPosition: route => route.labelPos,
       opacity: selected ? 0.025 : 1,
-      getColor: [0, 0, 0],
-      backgroundColor: hexToRgb(colorScale(group.key)),
+      getColor: [255, 255, 255],
+      backgroundColor: [18, 18, 18],
       sizeMinPixels: 0,
       sizeMaxPixels: 24,
       fontFamily: 'Fira Sans, sans-serif',
@@ -223,11 +243,11 @@ export default function TransitMap(props) {
         depthTest: false,
       },
     });
-  });
+  }));
 
   const highlightLayers = tooltipData && tooltipData.datum ? [
     new GeoJsonLayer({
-      id: 'highlightRouteBackground',
+      id: `${tooltipData.datum.scaleKey}-route-background`,
       data: [tooltipData.datum],
       stroked: true,
       filled: false,
@@ -243,7 +263,7 @@ export default function TransitMap(props) {
       },
     }),
     new GeoJsonLayer({
-      id: 'highlightRoute',
+      id: `${tooltipData.datum.scaleKey}-route`,
       data: [tooltipData.datum],
       stroked: true,
       filled: false,
@@ -259,13 +279,31 @@ export default function TransitMap(props) {
       },
     }),
     new TextLayer({
-      id: `${group.key}-route-labels`,
+      id: `${tooltipData.datum.scaleKey}-highlight-label-background`,
       data: [tooltipData.datum],
       pickable: false,
       getText: route => route.route,
       getPosition: route => route.labelPos,
       getColor: [0, 0, 0],
       backgroundColor: hexToRgb(colorScale(tooltipData.datum.scaleKey)),
+      sizeMinPixels: 20,
+      sizeMaxPixels: 36,
+      fontFamily: 'Fira Sans, sans-serif',
+      fontWeight: 500,
+      sizeUnits: 'meters',
+      sizeScale: 45,
+      parameters: {
+        depthTest: false,
+      },
+    }),
+    new TextLayer({
+      id: `${tooltipData.datum.scaleKey}-highlight-label`,
+      data: [tooltipData.datum],
+      pickable: false,
+      getText: route => route.route,
+      getPosition: route => route.labelPos,
+      getColor: [255, 255, 255],
+      backgroundColor: [18, 18, 18],
       sizeMinPixels: 16,
       sizeMaxPixels: 32,
       fontFamily: 'Fira Sans, sans-serif',
