@@ -69,6 +69,15 @@ function hexToRgb(hex) {
   ] : null;
 }
 
+function getRectDimensions(position, rectWidth, rectHeight) {
+  return {
+    x1: position[0] - rectWidth / 2,
+    y1: position[1],
+    x2: position[0] + rectWidth / 2,
+    y2: position[1] + rectHeight,
+  };
+}
+
 export default function TransitMap(props) {
   const { changeType, selected, visibleGroups, colorScale, orderScale, setSearchValue, clearSelected } = props;
   const [tooltipData, setTooltipData] = useState();
@@ -106,27 +115,16 @@ export default function TransitMap(props) {
         if (f.geometry) {
           const rectWidth = Math.max(rectHeight, rectHeight / 2 * f.route.length);
           const flatCoordinates = flatDeep(f.geometry.coordinates.slice(), Infinity);
-
           f.start = flatCoordinates.slice(0, 2);
           let position = f.start;
-          let usedPositon = labelPositions.find(lp => overlapping(lp, {
-            x1: position[0] - rectWidth / 2,
-            y1: position[1],
-            x2: position[0] + rectWidth / 2,
-            y2: position[1] + rectHeight,
-          }));
+          let usedPositon = labelPositions.find(lp => overlapping(lp, getRectDimensions(position, rectWidth, rectHeight)));
 
           while (usedPositon) {
             flatCoordinates.splice(0, 2);
             let pos = f.start;
             if (flatCoordinates.length >= 2) {
               pos = flatCoordinates.slice(0, 2);
-              usedPositon = labelPositions.find(lp => overlapping(lp, {
-                x1: pos[0] - rectWidth / 2,
-                y1: pos[1],
-                x2: pos[0] + rectWidth / 2,
-                y2: pos[1] + rectHeight,
-              }));
+              usedPositon = labelPositions.find(lp => overlapping(lp, getRectDimensions(pos, rectWidth, rectHeight)));
             } else {
               console.log(`default: ${f.route}`);
               usedPositon = false;
@@ -134,13 +132,7 @@ export default function TransitMap(props) {
             position = pos;
           }
 
-          labelPositions.push({
-            x1: position[0] - rectWidth / 2,
-            y1: position[1],
-            x2: position[0] + rectWidth / 2,
-            y2: position[1] + rectHeight,
-          });
-
+          labelPositions.push(getRectDimensions(position, rectWidth, rectHeight));
           f.labelPos = position;
         }
         return f;
