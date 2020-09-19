@@ -20,11 +20,12 @@
 }
 
 .App .panel .headings {
-  display: flex;
-  flex-direction: column;
+  /*display: flex;*/
+  /*flex-direction: column;*/
 }
 
 .App .panel .headings .title {
+  /*flex: 1;*/
   font-weight: 500;
   font-size: 1.5em;
   margin-bottom: 0.5em;
@@ -32,6 +33,8 @@
 }
 
 .App .panel .headings .subtitle {
+  /*flex: 1;*/
+  /*flex: auto;*/
   margin-bottom: 1em;
   font-weight: 500;
   font-family: 'Fira Sans Condensed', sans-serif;
