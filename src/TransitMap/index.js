@@ -72,7 +72,7 @@ function hexToRgb(hex) {
 }
 
 export default function TransitMap(props) {
-  const { changeType, selected, visibleGroups, colorScale, orderScale, setSearchValue } = props;
+  const { changeType, selected, visibleGroups, colorScale, orderScale, setSearchValue, clearSelected } = props;
   const [tooltipData, setTooltipData] = useState();
   const [ref, { x, y, width, height }] = useDimensions();
 
@@ -190,7 +190,7 @@ export default function TransitMap(props) {
 
   function clearSelection() {
     if (selected !== '') {
-      setSearchValue('');
+      clearSelected();
     }
     if (tooltipData) {
       setTooltipData(null);  

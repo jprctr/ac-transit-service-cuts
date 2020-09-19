@@ -53,6 +53,11 @@ function App() {
     setSuggestions(getSuggestions(searchValue, visibleGroups));
   }, [searchValue, visibleGroups]);
 
+  function clearSelected() {
+    setValue('');
+    setSuggestions(getSuggestions('', visibleGroups));
+  }
+
   function updateGroups(id) {
     setVisibleGroups(groups => {
       if (groups.includes(id)) {
@@ -120,6 +125,7 @@ function App() {
           }}
         >
           <Autosuggest
+            focusInputOnSuggestionClick={false}
             alwaysRenderSuggestions={width > 768}
             suggestions={suggestions.filter(route => visibleGroups.includes(route.scaleKey))}
             onSuggestionsFetchRequested={({ value }) => setSuggestions(getSuggestions(value, visibleGroups))}
@@ -138,6 +144,7 @@ function App() {
       <TransitMap
         changeType={changeType}
         selected={value}
+        clearSelected={clearSelected}
         visibleGroups={visibleGroups}
         colorScale={colorScale}
         orderScale={orderScale}
