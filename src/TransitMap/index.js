@@ -13,8 +13,6 @@ import './styles.css';
 import Winter19Routeshape from './Winter19Routeshape.geo.json';
 import serviceChangeData from './ac-transit-service-cuts.json';
 
-console.log(process.env.REACT_APP_MAPBOX_TOKEN);
-
 export const rename = {
   '1': 'BRT/1',
 };
