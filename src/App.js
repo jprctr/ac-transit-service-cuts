@@ -98,6 +98,11 @@ function App() {
           <div className='subtitle'>
             Fall 2020 (30% Scenario)
           </div>
+          <div className='source'>
+            <span>
+              Based on <a href={`${process.env.PUBLIC_URL}/AC Transit Staff Report No. 20-262 - Attachment 2 - Summary of Proposed Changes.pdf`} target='_blank' rel='noopener noreferrer'>AC Transit Staff Report No. 20-262, Attachment 2</a>
+            </span>
+          </div>
         </div>
         <div className='legend'>
           {typesInOrder.filter(t => t !== 'other').reverse().map(t => (
