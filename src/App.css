@@ -182,6 +182,9 @@
     margin-bottom: 0.25em;
   }
   .App .panel .headings .source {
+    margin-bottom: 0.25em;
+  }
+  .App .panel .transbayToggle {
     margin-bottom: 0.5em;
   }
 
