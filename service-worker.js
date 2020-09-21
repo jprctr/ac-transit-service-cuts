@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/ac-transit-service-cuts/precache-manifest.de710158ecafa02274fa7b35862f66f0.js"
+  "/ac-transit-service-cuts/precache-manifest.fb00956ebab068ef9f70535b4804279b.js"
 );
 
 self.addEventListener('message', (event) => {
