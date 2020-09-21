@@ -36,14 +36,38 @@
 }
 
 .App .panel .headings .source {
-  margin-bottom: 0.8em;
+  margin-bottom: 0.55em;
+  line-height: 1em;
   font-family: 'Fira Sans Condensed', sans-serif;
 }
+
 .App .panel .headings .source span {
   font-size: 0.8em;
 }
+
 .App .panel .headings .source span a {
   color: white;
+}
+
+.App .panel .transbayToggle {
+  display: flex;
+  margin-bottom: 0.6em;
+  /*line-height: 1em;*/
+}
+
+.App .panel .transbayToggle .toggle {
+  font-size: 0.8em;
+  margin: 0 -0.25em;
+}
+
+.App .panel .transbayToggle input {
+  margin: 0;
+}
+
+.App .panel .transbayToggle .label {
+  margin: auto 0.5em;
+  font-size: 0.8em;
+  font-family: 'Fira Sans Condensed', sans-serif;
 }
 
 .App .panel .controls {
@@ -158,6 +182,7 @@
     margin-bottom: 0.25em;
   }
   .App .panel .headings .source {
+    margin-bottom: 0.5em;
   }
 
   .App .panel .controls {

@@ -3,6 +3,7 @@ import { scaleOrdinal } from 'd3-scale';
 import sortBy from 'lodash.sortby';
 import Autosuggest from 'react-autosuggest';
 import useDimensions from 'react-use-dimensions';
+import { Toggle } from "react-toggle-component";
 
 import TransitMap, { rename } from './TransitMap'
 import serviceChanges from './TransitMap/ac-transit-service-cuts.json';
@@ -33,10 +34,14 @@ const routes = sortBy(
   ,r => isNaN(parseInt(r.route)) ? r.route : parseInt(r.route))
 ,r => -r.order);
 
-const getSuggestions = (value, visibleGroups) => {
+const getSuggestions = (value, visibleGroups, transbay) => {
   const inputValue = value.trim().toLowerCase();
   const inputLength = inputValue.length;
-  return inputLength === 0 ? routes : routes.filter(route => route.route.toLowerCase().includes(inputValue));
+  return inputLength === 0
+    ? routes
+    : routes.filter(route => (
+      route.route.toLowerCase().includes(inputValue) && (transbay || !route.area.toLowerCase().includes('transbay'))
+    ));
 };
 
 const getSuggestionValue = suggestion => suggestion.route;
@@ -46,17 +51,18 @@ function App() {
   const [searchValue, setSearchValue] = useState('');
   const [suggestions, setSuggestions] = useState(routes);
   const [visibleGroups, setVisibleGroups] = useState(typesInOrder);
+  const [showTransbay, setShowTransbay] = useState(true);
   const [ref, { width }] = useDimensions();
 
   useEffect(() => {
     setValue(searchValue);
-    setSuggestions(getSuggestions(searchValue, visibleGroups));
-  }, [searchValue, visibleGroups]);
+    setSuggestions(getSuggestions(searchValue, visibleGroups, showTransbay));
+  }, [searchValue, visibleGroups, showTransbay]);
 
   function clearSelected() {
     setValue('');
     setSearchValue('');
-    setSuggestions(getSuggestions('', visibleGroups));
+    setSuggestions(getSuggestions('', visibleGroups, showTransbay));
   }
 
   function updateGroups(id) {
@@ -104,6 +110,27 @@ function App() {
             </span>
           </div>
         </div>
+        <div className='transbayToggle'>
+          <Toggle
+            name='transbayLines'
+            className='toggle'
+            checked={showTransbay}
+            onChange={e => setShowTransbay(e.target.checked)}
+            leftBackgroundColor='#121212'
+            rightBackgroundColor='#10684e'
+            borderColor='none'
+            knobColor='#ffffff'
+            borderWidth='0.25em'
+            width='2.7em'
+            height='1.65em'
+            knobWidth='1em'
+            knobHeight='1em'
+            knobRadius='0.5em'
+          />
+          <label className='label' htmlFor='transbayLines'>
+            {showTransbay ? 'Showing' : 'Hiding'} Transbay Services
+          </label>
+        </div>
         <div className='legend'>
           {typesInOrder.filter(t => t !== 'other').reverse().map(t => (
             <div
@@ -133,8 +160,10 @@ function App() {
           <Autosuggest
             focusInputOnSuggestionClick={false}
             alwaysRenderSuggestions={width > 768}
-            suggestions={suggestions.filter(route => visibleGroups.includes(route.scaleKey))}
-            onSuggestionsFetchRequested={({ value }) => setSuggestions(getSuggestions(value, visibleGroups))}
+            suggestions={suggestions.filter(route => (
+              visibleGroups.includes(route.scaleKey) && (showTransbay || !route.area.toLowerCase().includes('transbay'))
+            ))}
+            onSuggestionsFetchRequested={({ value }) => setSuggestions(getSuggestions(value, visibleGroups, showTransbay))}
             onSuggestionsClearRequested={() => {}}
             getSuggestionValue={getSuggestionValue}
             renderSuggestion={suggestion => renderSuggestion(suggestion)}
@@ -152,6 +181,7 @@ function App() {
         selected={value}
         clearSelected={clearSelected}
         visibleGroups={visibleGroups}
+        showTransbay={showTransbay}
         colorScale={colorScale}
         orderScale={orderScale}
         setSearchValue={setSearchValue}

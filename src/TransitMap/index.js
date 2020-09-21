@@ -83,7 +83,7 @@ function getRectDimensions(position, rectWidth, rectHeight) {
 }
 
 export default function TransitMap(props) {
-  const { changeType, selected, visibleGroups, colorScale, orderScale, setSearchValue, clearSelected } = props;
+  const { changeType, selected, visibleGroups, showTransbay, colorScale, orderScale, setSearchValue, clearSelected } = props;
   const [tooltipData, setTooltipData] = useState();
   const [ref, { x, y, width, height }] = useDimensions();
 
@@ -145,8 +145,10 @@ export default function TransitMap(props) {
   }, [changeType, colorScale, orderScale]);
 
   const displayRoutes = useMemo(() => (
-    routes.filter(route => visibleGroups.includes(route.scaleKey) && route.geometry)
-  ), [routes, visibleGroups]);
+    routes.filter(route => (
+      visibleGroups.includes(route.scaleKey) && (showTransbay || !route.changes.area.toLowerCase().includes('transbay')) && route.geometry
+    ))
+  ), [routes, visibleGroups, showTransbay]);
 
   const routesByGroup = useMemo(() => (
     mapToNest(group(displayRoutes, route => route.scaleKey))
@@ -195,7 +197,9 @@ export default function TransitMap(props) {
     const { object } = target;
     if (object) {
       const { route } = object;
-      const datum = routes.filter(r => visibleGroups.includes(r.scaleKey)).find(r => r.route === route);
+      const datum = routes.filter(r => (
+        visibleGroups.includes(r.scaleKey) && (showTransbay || !r.changes.area.toLowerCase().includes('transbay'))
+      )).find(r => r.route === route);
       if (datum) {
         if (!tooltipData || tooltipData.route !== route) {
           updateTooltip(datum, true);

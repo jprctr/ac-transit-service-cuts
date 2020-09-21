@@ -17,7 +17,9 @@
     "react-dom": "^16.13.1",
     "react-map-gl": "^5.2.8",
     "react-scripts": "3.4.3",
+    "react-toggle-component": "^3.0.8",
     "react-use-dimensions": "^1.2.1",
+    "styled-components": "^5.2.0",
     "viewport-mercator-project": "^7.0.1"
   },
   "scripts": {
