@@ -96,7 +96,7 @@ function App() {
             Proposed AC Transit Service Cuts 
           </div>
           <div className='subtitle'>
-            Fall 2020 (30% Scenario)
+            Summer 2021 (30% Scenario)
           </div>
           <div className='source'>
             <span>
